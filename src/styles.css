@@ -44,7 +44,8 @@ a {
 }
 
 .hero,
-main {
+main,
+.site-footer {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
 }
@@ -110,11 +111,13 @@ p {
 }
 
 h1 {
-  max-width: 12ch;
-  margin-bottom: 1.25rem;
-  font-size: clamp(3.25rem, 8vw, 6.75rem);
-  line-height: 0.9;
-  letter-spacing: -0.08em;
+  max-width: 14ch;
+  margin-bottom: 1.35rem;
+  color: #e5f5f8;
+  font-size: clamp(2.85rem, 6.8vw, 5.75rem);
+  font-weight: 760;
+  line-height: 0.98;
+  letter-spacing: -0.055em;
 }
 
 h2 {
@@ -140,7 +143,10 @@ h3 {
 .controls-panel,
 .local-panel,
 .route-card,
-.route-detail {
+.candidate-panel,
+.candidate-card,
+.route-detail,
+.footer-card {
   border: 1px solid rgba(255, 255, 255, 0.11);
   border-radius: 1.5rem;
   background: rgba(13, 34, 41, 0.82);
@@ -305,7 +311,7 @@ select {
 
 .local-panel {
   display: grid;
-  grid-template-columns: minmax(14rem, 0.7fr) minmax(14rem, 0.9fr) minmax(18rem, 1.4fr);
+  grid-template-columns: minmax(14rem, 0.7fr) minmax(14rem, 0.9fr) minmax(16rem, 1fr) minmax(18rem, 1.2fr);
   gap: 1.25rem;
   align-items: center;
   margin: 1.5rem 0;
@@ -330,6 +336,22 @@ select {
 .local-label {
   margin-bottom: 0.6rem;
   font-weight: 800;
+}
+
+.local-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.compact-button {
+  min-height: 2.8rem;
+  padding: 0.65rem 0.9rem;
+}
+
+.danger-button {
+  border-color: rgba(247, 200, 115, 0.42);
 }
 
 .recent-routes {
@@ -366,6 +388,7 @@ a:focus-visible {
 }
 
 .catalog-section,
+.candidate-section,
 .player-section {
   padding: 2rem 0;
 }
@@ -387,6 +410,139 @@ a:focus-visible {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.25rem;
+}
+
+.candidate-panel {
+  padding: 1.25rem;
+  background: rgba(20, 51, 61, 0.72);
+}
+
+.candidate-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.candidate-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.candidate-panel summary::after {
+  content: "Review backlog ▾";
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.65rem 0.9rem;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.candidate-panel[open] summary::after {
+  content: "Hide backlog ▴";
+}
+
+.candidate-panel summary strong {
+  display: block;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  letter-spacing: -0.045em;
+}
+
+.candidate-disclaimer {
+  margin: 1rem 0 1.25rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.candidate-disclaimer code,
+.candidate-promoted code {
+  border-radius: 0.35rem;
+  padding: 0.12rem 0.28rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+}
+
+.candidate-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.candidate-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  background: rgba(6, 19, 24, 0.45);
+}
+
+.candidate-card-header,
+.candidate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.candidate-card-header {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.candidate-status {
+  border-radius: 999px;
+  padding: 0.45rem 0.65rem;
+  background: rgba(247, 200, 115, 0.16);
+  color: var(--warning);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+}
+
+.candidate-meta {
+  display: grid;
+  gap: 0.45rem;
+  margin: 0;
+}
+
+.candidate-meta div {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.75rem;
+}
+
+.candidate-meta dt {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.candidate-meta dd {
+  margin: 0;
+  font-weight: 800;
+}
+
+.candidate-notes,
+.candidate-promoted,
+.candidate-checklist,
+.candidate-copy-status {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.candidate-checklist {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.candidate-actions {
+  justify-content: flex-start;
+}
+
+.candidate-copy-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-weight: 900;
 }
 
 .route-card {
@@ -549,6 +705,14 @@ a:focus-visible {
 }
 
 .player-shell:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+}
+
+.player-shell:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
   border-radius: 0;
 }
 
@@ -668,27 +832,98 @@ a:focus-visible {
   text-align: center;
 }
 
+.site-footer {
+  padding: 1.5rem 0 2rem;
+}
+
+.footer-card {
+  display: grid;
+  grid-template-columns: minmax(14rem, 0.8fr) minmax(0, 1.4fr) auto;
+  gap: 1.25rem;
+  align-items: start;
+  padding: 1.25rem;
+  background: rgba(13, 34, 41, 0.62);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.24);
+}
+
+.footer-heading h2 {
+  font-size: clamp(1.45rem, 2.4vw, 2.2rem);
+}
+
+.footer-copy {
+  display: grid;
+  gap: 0.65rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.footer-copy p {
+  margin-bottom: 0;
+}
+
+.footer-copy strong {
+  color: var(--text);
+}
+
+.footer-card a {
+  color: var(--text);
+  font-weight: 900;
+  text-underline-offset: 0.2em;
+}
+
+.footer-card a:hover {
+  color: var(--accent);
+}
+
+.footer-links {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.footer-links a {
+  display: inline-flex;
+  min-height: 2.8rem;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 0.7rem 0.95rem;
+  background: rgba(255, 255, 255, 0.07);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .hero-grid,
   .controls-panel,
   .local-panel,
-  .selected-layout {
+  .selected-layout,
+  .footer-card {
     grid-template-columns: 1fr;
   }
 
   .route-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .candidate-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .footer-links {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 640px) {
   .hero,
-  main {
+  main,
+  .site-footer {
     width: min(100% - 20px, 1180px);
   }
 
   .topbar,
   .section-heading,
+  .candidate-panel summary,
   .ride-actions {
     align-items: stretch;
     flex-direction: column;
@@ -700,6 +935,7 @@ a:focus-visible {
 
   .filter-row,
   .route-grid,
+  .candidate-grid,
   .ride-actions {
     grid-template-columns: 1fr;
   }

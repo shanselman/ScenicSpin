@@ -1,4 +1,4 @@
-const cacheName = 'scenic-rides-shell-v1';
+const cacheName = 'pedalscape-shell-v2';
 const shellAssets = [
   './',
   './index.html',
@@ -6,7 +6,10 @@ const shellAssets = [
   './src/styles.css',
   './manifest.webmanifest',
   './icons/favicon.svg',
-  './icons/app-icon.svg'
+  './icons/app-icon.svg',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './icons/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {

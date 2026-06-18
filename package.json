@@ -4,7 +4,11 @@
   "private": true,
   "description": "Static scenic cycling route catalog and fullscreen ride player.",
   "scripts": {
-    "start": "python -m http.server 5173",
-    "check": "node --check src/app.js"
+    "start": "python -m http.server 5173 --bind 127.0.0.1",
+    "check": "node --check src/app.js",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0"
   }
 }

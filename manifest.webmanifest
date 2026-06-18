@@ -1,12 +1,15 @@
 {
-  "name": "Scenic Rides",
-  "short_name": "Scenic",
-  "description": "A no-login scenic cycling route catalog with local favorites and ride history.",
+  "name": "PedalScape",
+  "short_name": "PedalScape",
+  "description": "A no-login scenic cycling PWA with local favorites and ride history.",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#061318",
   "theme_color": "#061318",
+  "categories": ["fitness", "health", "lifestyle"],
   "icons": [
     {
       "src": "icons/icon-192.png",

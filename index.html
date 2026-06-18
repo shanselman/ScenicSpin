@@ -6,19 +6,20 @@
     <meta name="theme-color" content="#061318">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Scenic Rides">
+    <meta name="description" content="PedalScape is a local-first scenic cycling PWA for any indoor bike.">
+    <meta name="apple-mobile-web-app-title" content="PedalScape">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-    <title>Scenic Ride Catalog</title>
+    <title>PedalScape</title>
     <link rel="stylesheet" href="src/styles.css">
   </head>
   <body>
     <header class="hero">
       <nav class="topbar" aria-label="Primary">
-        <a class="brand" href="#catalog" aria-label="Scenic Ride Catalog home">
+        <a class="brand" href="#catalog" aria-label="PedalScape home">
           <span class="brand-mark" aria-hidden="true">↗</span>
-          Scenic Rides
+          PedalScape
         </a>
         <a class="skip-link" href="#player">Skip to player</a>
       </nav>
@@ -93,6 +94,11 @@
           <strong id="favoriteCount">0 favorites</strong>
           <span>Favorites, recent rides, and filter preferences stay local to this browser.</span>
         </div>
+        <div class="local-actions" aria-label="App actions">
+          <button id="installButton" class="secondary-button compact-button" type="button" hidden>Install app</button>
+          <button id="resetDataButton" class="secondary-button compact-button danger-button" type="button">Reset local data</button>
+          <span id="appStatus" class="local-empty" role="status" aria-live="polite"></span>
+        </div>
         <div>
           <p class="local-label">Recent routes</p>
           <div id="recentRoutes" class="recent-routes" aria-live="polite"></div>
@@ -108,6 +114,23 @@
           <p id="resultCount" class="result-count" aria-live="polite"></p>
         </div>
         <div id="routeGrid" class="route-grid"></div>
+      </section>
+
+      <section id="candidateBacklog" class="candidate-section" aria-labelledby="candidateTitle">
+        <details class="candidate-panel">
+          <summary>
+            <span>
+              <span class="eyebrow">Review candidates</span>
+              <strong id="candidateTitle">Candidate backlog</strong>
+            </span>
+            <span id="candidateCount" class="result-count" aria-live="polite">Loading…</span>
+          </summary>
+          <p class="candidate-disclaimer">
+            These entries load from <code>routes/candidate-backlog.json</code> for review only.
+            They are not mixed into the featured ride catalog until promoted into <code>routes/catalog.json</code>.
+          </p>
+          <div id="candidateGrid" class="candidate-grid" aria-live="polite"></div>
+        </details>
       </section>
 
       <section id="player" class="player-section" aria-labelledby="playerTitle">
@@ -145,7 +168,32 @@
       </section>
     </main>
 
+    <footer class="site-footer" aria-labelledby="footerTitle">
+      <div class="footer-card">
+        <div class="footer-heading">
+          <p class="eyebrow">Local-first by design</p>
+          <h2 id="footerTitle">PedalScape keeps the ride simple.</h2>
+        </div>
+        <div class="footer-copy">
+          <p>
+            Made by <a href="https://www.hanselman.com/" target="_blank" rel="noopener">Scott Hanselman</a>.
+            There is no backend database, account system, or social login.
+          </p>
+          <p>
+            Favorites, recent rides, and preferences stay in this browser on this device. Use
+            <strong>Reset local data</strong> above whenever you want a fresh start.
+          </p>
+          <p>
+            PedalScape is an installable PWA for an app-like fullscreen ride experience. Videos remain
+            hosted by their original creators and platforms; PedalScape only links or embeds them.
+          </p>
+        </div>
+        <div class="footer-links" aria-label="Footer links">
+          <a href="https://github.com/shanselman/ScenicSpin" target="_blank" rel="noopener">View source on GitHub</a>
+        </div>
+      </div>
+    </footer>
+
     <script src="src/app.js"></script>
   </body>
 </html>
-

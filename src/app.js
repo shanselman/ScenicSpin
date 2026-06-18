@@ -1,10 +1,19 @@
 let routes = [];
+let candidateRoutes = [];
+let deferredInstallPrompt = null;
 
 const catalogUrl = 'routes/catalog.json';
+const candidateBacklogUrl = 'routes/candidate-backlog.json';
 const selectedRouteStorageKey = 'scenicRideCatalog.selectedRouteId';
 const favoriteRoutesStorageKey = 'scenicRideCatalog.favoriteRouteIds';
 const recentRoutesStorageKey = 'scenicRideCatalog.recentRouteIds';
 const filterPreferencesStorageKey = 'scenicRideCatalog.filterPreferences';
+const localStorageKeys = [
+  selectedRouteStorageKey,
+  favoriteRoutesStorageKey,
+  recentRoutesStorageKey,
+  filterPreferencesStorageKey
+];
 const defaultRecommendationId = 'bavarian-countryside-90-minute-4k';
 const maxRecentRoutes = 5;
 
@@ -19,7 +28,9 @@ const state = {
   scenery: 'all',
   intensity: 'all',
   favoritesOnly: false,
-  catalogStatus: 'loading'
+  catalogStatus: 'loading',
+  candidateStatus: 'loading',
+  candidateCopyMessage: ''
 };
 
 const elements = {
@@ -38,6 +49,8 @@ const elements = {
   recentRoutes: document.querySelector('#recentRoutes'),
   resultCount: document.querySelector('#resultCount'),
   routeGrid: document.querySelector('#routeGrid'),
+  candidateCount: document.querySelector('#candidateCount'),
+  candidateGrid: document.querySelector('#candidateGrid'),
   playerShell: document.querySelector('#playerShell'),
   selectedTitle: document.querySelector('#selectedTitle'),
   selectedDescription: document.querySelector('#selectedDescription'),
@@ -45,7 +58,10 @@ const elements = {
   startRideButton: document.querySelector('#startRideButton'),
   favoriteRouteButton: document.querySelector('#favoriteRouteButton'),
   fullscreenButton: document.querySelector('#fullscreenButton'),
-  sourceLink: document.querySelector('#sourceLink')
+  sourceLink: document.querySelector('#sourceLink'),
+  installButton: document.querySelector('#installButton'),
+  resetDataButton: document.querySelector('#resetDataButton'),
+  appStatus: document.querySelector('#appStatus')
 };
 
 function titleCase(value) {
@@ -99,16 +115,42 @@ function getYouTubeThumbnail(videoId, quality = 'hqdefault') {
 }
 
 function readStoredRouteId() {
+  const storages = [sessionStorage, localStorage];
+
+  for (const storage of storages) {
+    try {
+      const routeId = storage.getItem(selectedRouteStorageKey);
+      if (routeId) return routeId;
+    } catch {
+      // Storage can be disabled; selection still works for the current page.
+    }
+  }
+
+  return null;
+}
+
+function removeStoredRouteId() {
   try {
-    return sessionStorage.getItem(selectedRouteStorageKey) || localStorage.getItem(selectedRouteStorageKey);
+    sessionStorage.removeItem(selectedRouteStorageKey);
   } catch {
-    return null;
+    // Storage can be disabled; selection still works for the current page.
+  }
+
+  try {
+    localStorage.removeItem(selectedRouteStorageKey);
+  } catch {
+    // Storage can be disabled; selection still works for the current page.
   }
 }
 
 function saveSelectedRouteId(routeId) {
   try {
     sessionStorage.setItem(selectedRouteStorageKey, routeId);
+  } catch {
+    // Storage can be disabled; selection still works for the current page.
+  }
+
+  try {
     localStorage.setItem(selectedRouteStorageKey, routeId);
   } catch {
     // Storage can be disabled; selection still works for the current page.
@@ -120,6 +162,11 @@ function readLocalJson(key, fallback) {
     const value = localStorage.getItem(key);
     return value ? JSON.parse(value) : fallback;
   } catch {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Local app features gracefully degrade when storage is disabled.
+    }
     return fallback;
   }
 }
@@ -135,8 +182,8 @@ function writeLocalJson(key, value) {
 function loadLocalState() {
   const favoriteRouteIds = readLocalJson(favoriteRoutesStorageKey, []);
   const recentRouteIds = readLocalJson(recentRoutesStorageKey, []);
-  state.favoriteRouteIds = new Set(Array.isArray(favoriteRouteIds) ? favoriteRouteIds : []);
-  state.recentRouteIds = Array.isArray(recentRouteIds) ? recentRouteIds : [];
+  state.favoriteRouteIds = new Set(Array.isArray(favoriteRouteIds) ? favoriteRouteIds.filter((id) => typeof id === 'string') : []);
+  state.recentRouteIds = Array.isArray(recentRouteIds) ? recentRouteIds.filter((id) => typeof id === 'string') : [];
 }
 
 function isFavorite(routeId) {
@@ -215,6 +262,28 @@ function normalizeRoute(route) {
     thumbnailFallbackUrl,
     description: `${route.terrain || 'Scenic cycling route'} • ${route.creator || 'Public video source'}`
   };
+}
+
+function normalizeCandidateRoute(route) {
+  const normalizedRoute = normalizeRoute(route);
+  const reviewChecklist = Array.isArray(route.verification?.reviewChecklist) ? route.verification.reviewChecklist : [];
+
+  return {
+    ...normalizedRoute,
+    status: route.status || 'candidate',
+    curationTier: route.curationTier || 'backlog',
+    promotionReadiness: route.promotionReadiness || 'needs-review',
+    reviewChecklist,
+    reviewNotes: route.reviewNotes || route.curationNotes || 'No review notes yet.',
+    productionCatalogId: route.productionCatalogId || '',
+    promotedToCatalogAt: route.promotedToCatalogAt || ''
+  };
+}
+
+function formatCandidateStatus(candidate) {
+  const status = titleCase(String(candidate.status || 'candidate').replace(/-/g, ' '));
+  const readiness = titleCase(String(candidate.promotionReadiness || 'needs-review').replace(/-/g, ' '));
+  return `${status} · ${readiness}`;
 }
 
 function setControlsDisabled(disabled) {
@@ -374,6 +443,7 @@ function chooseFeaturedRoute() {
   if (storedRoute) {
     return { route: storedRoute, mode: 'continue' };
   }
+  if (storedRouteId) removeStoredRouteId();
 
   const recommendedRoute =
     routes.find((route) => route.id === defaultRecommendationId) ||
@@ -387,6 +457,10 @@ function setFeaturedRoute(route, mode = 'recommended') {
   state.featuredRoute = route;
   state.heroMode = mode;
   renderHeroRoute();
+}
+
+function setAppStatus(message = '') {
+  elements.appStatus.textContent = message;
 }
 
 function renderCatalog() {
@@ -489,6 +563,92 @@ function renderCatalog() {
   });
 }
 
+function renderCandidateStatus(message, detail = '') {
+  elements.candidateGrid.innerHTML = `
+    <div class="empty-state">
+      <strong>${escapeHtml(message)}</strong>
+      ${detail ? `<span>${escapeHtml(detail)}</span>` : ''}
+    </div>
+  `;
+}
+
+function renderCandidates() {
+  elements.candidateGrid.innerHTML = '';
+
+  if (state.candidateStatus === 'loading') {
+    elements.candidateCount.textContent = 'Loading…';
+    renderCandidateStatus('Loading review backlog…');
+    return;
+  }
+
+  if (state.candidateStatus === 'error') {
+    elements.candidateCount.textContent = 'Backlog unavailable';
+    renderCandidateStatus('Could not load routes/candidate-backlog.json.', 'The featured catalog is unaffected.');
+    return;
+  }
+
+  if (candidateRoutes.length === 0) {
+    elements.candidateCount.textContent = '0 candidates';
+    renderCandidateStatus('No candidate backlog entries found.', 'Add entries to routes/candidate-backlog.json for review.');
+    return;
+  }
+
+  const needsReviewCount = candidateRoutes.filter((candidate) => candidate.promotionReadiness !== 'promoted-to-production').length;
+  elements.candidateCount.textContent = `${candidateRoutes.length} backlog entr${candidateRoutes.length === 1 ? 'y' : 'ies'} · ${needsReviewCount} to review`;
+
+  candidateRoutes.forEach((candidate) => {
+    const card = document.createElement('article');
+    const tags = candidate.sceneryTags
+      .slice(0, 4)
+      .map((tag) => `<li>${escapeHtml(titleCase(tag))}</li>`)
+      .join('');
+    const checklist = candidate.reviewChecklist
+      .slice(0, 2)
+      .map((item) => `<li>${escapeHtml(item)}</li>`)
+      .join('');
+    const promotedNote = candidate.productionCatalogId
+      ? `<p class="candidate-promoted">Promoted as <code>${escapeHtml(candidate.productionCatalogId)}</code>${candidate.promotedToCatalogAt ? ` on ${escapeHtml(candidate.promotedToCatalogAt)}` : ''}.</p>`
+      : '';
+
+    card.className = 'candidate-card';
+    card.innerHTML = `
+      <div class="candidate-card-header">
+        <span class="candidate-status">${escapeHtml(formatCandidateStatus(candidate))}</span>
+        <span>${escapeHtml(candidate.durationLabel)} · ${escapeHtml(candidate.intensity)}</span>
+      </div>
+      <h3>${escapeHtml(candidate.title)}</h3>
+      <dl class="candidate-meta">
+        <div><dt>Creator</dt><dd>${escapeHtml(candidate.creator || 'Unknown')}</dd></div>
+        <div><dt>Location</dt><dd>${escapeHtml(candidate.location || 'Needs review')}</dd></div>
+        <div><dt>Source</dt><dd>${escapeHtml(candidate.sourceType)}</dd></div>
+      </dl>
+      <ul class="pill-list" aria-label="Candidate tags">${tags || '<li>Needs tags</li>'}</ul>
+      <p class="candidate-notes">${escapeHtml(candidate.reviewNotes)}</p>
+      ${promotedNote}
+      ${checklist ? `<ul class="candidate-checklist" aria-label="Review checklist">${checklist}</ul>` : ''}
+      <div class="candidate-actions">
+        <a class="secondary-button compact-button" href="${escapeHtml(candidate.sourceUrl)}" target="_blank" rel="noopener">Open source</a>
+        ${
+          candidate.embedUrl
+            ? `<a class="secondary-button compact-button" href="${escapeHtml(candidate.embedUrl)}" target="_blank" rel="noopener">Open embed</a>`
+            : ''
+        }
+        <button class="secondary-button compact-button copy-source-button" type="button" data-source-url="${escapeHtml(candidate.sourceUrl)}">Copy URL</button>
+      </div>
+    `;
+
+    elements.candidateGrid.append(card);
+  });
+
+  if (state.candidateCopyMessage) {
+    const status = document.createElement('p');
+    status.className = 'candidate-copy-status';
+    status.setAttribute('role', 'status');
+    status.textContent = state.candidateCopyMessage;
+    elements.candidateGrid.prepend(status);
+  }
+}
+
 function clearSelectedRoute(message = 'Choose a scenic ride card above. The player supports YouTube embeds, fullscreen mode, and source links for browser fallback.') {
   state.selectedRoute = null;
   elements.selectedTitle.textContent = 'No route selected';
@@ -548,6 +708,16 @@ function toggleFavorite(routeId) {
   renderCatalog();
 }
 
+function buildEmbedUrl(route, autoplay) {
+  const fallbackUrl = `https://www.youtube-nocookie.com/embed/${route.videoId}`;
+  const url = new URL(route.embedUrl || fallbackUrl, window.location.href);
+  url.searchParams.set('rel', '0');
+  url.searchParams.set('modestbranding', '1');
+  url.searchParams.set('playsinline', '1');
+  if (autoplay) url.searchParams.set('autoplay', '1');
+  return url.toString();
+}
+
 function loadPlayer(route, autoplay = false) {
   elements.playerShell.innerHTML = '';
 
@@ -561,7 +731,7 @@ function loadPlayer(route, autoplay = false) {
     iframe.title = `${route.title} ride video`;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
     iframe.allowFullscreen = true;
-    iframe.src = `${route.embedUrl || `https://www.youtube-nocookie.com/embed/${route.videoId}`}?rel=0&modestbranding=1&playsinline=1${autoplay ? '&autoplay=1' : ''}`;
+    iframe.src = buildEmbedUrl(route, autoplay);
     elements.playerShell.append(iframe);
     return;
   }
@@ -576,7 +746,10 @@ function loadPlayer(route, autoplay = false) {
 function selectRoute(routeId, moveToPlayer = false, options = {}) {
   const { persist = true, updateHero = true } = options;
   const selectedRoute = routes.find((route) => route.id === routeId);
-  if (!selectedRoute) return;
+  if (!selectedRoute) {
+    if (routeId === readStoredRouteId()) removeStoredRouteId();
+    return;
+  }
 
   state.selectedRoute = selectedRoute;
   if (persist) saveSelectedRouteId(selectedRoute.id);
@@ -591,6 +764,15 @@ function selectRoute(routeId, moveToPlayer = false, options = {}) {
 }
 
 async function requestFullscreen() {
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    if (document.exitFullscreen) {
+      await document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    }
+    return;
+  }
+
   const target = elements.playerShell;
   if (target.requestFullscreen) {
     await target.requestFullscreen();
@@ -599,15 +781,82 @@ async function requestFullscreen() {
   }
 }
 
+function updateFullscreenButton() {
+  const isFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+  elements.fullscreenButton.textContent = isFullscreen ? 'Exit fullscreen' : 'Fullscreen';
+  elements.fullscreenButton.setAttribute('aria-pressed', isFullscreen ? 'true' : 'false');
+}
+
 function startRide() {
   if (!state.selectedRoute) return;
   saveSelectedRouteId(state.selectedRoute.id);
   addRecentRoute(state.selectedRoute.id);
+  renderLocalPanel();
   setFeaturedRoute(state.selectedRoute, 'continue');
   loadPlayer(state.selectedRoute, true);
   requestFullscreen().catch(() => {
     elements.sourceLink.focus();
   });
+}
+
+async function copyCandidateSource(sourceUrl) {
+  if (!sourceUrl) return;
+
+  try {
+    await navigator.clipboard.writeText(sourceUrl);
+    state.candidateCopyMessage = 'Source URL copied.';
+  } catch {
+    state.candidateCopyMessage = sourceUrl;
+  }
+
+  renderCandidates();
+}
+
+function resetLocalData() {
+  localStorageKeys.forEach((key) => {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Local app features gracefully degrade when storage is disabled.
+    }
+  });
+  removeStoredRouteId();
+
+  state.favoriteRouteIds = new Set();
+  state.recentRouteIds = [];
+  state.query = '';
+  state.duration = 'all';
+  state.scenery = 'all';
+  state.intensity = 'all';
+  state.favoritesOnly = false;
+
+  elements.searchInput.value = '';
+  elements.durationFilter.value = 'all';
+  elements.sceneryFilter.value = 'all';
+  elements.intensityFilter.value = 'all';
+  elements.favoritesFilter.checked = false;
+
+  if (routes.length > 0) {
+    const featured = chooseFeaturedRoute();
+    setFeaturedRoute(featured.route, 'recommended');
+    selectRoute(featured.route.id, false, { persist: false, updateHero: false });
+  } else {
+    clearSelectedRoute();
+    renderCatalog();
+  }
+
+  setAppStatus('Local data reset.');
+}
+
+async function installApp() {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const result = await deferredInstallPrompt.userChoice;
+  if (result.outcome === 'accepted') {
+    elements.installButton.hidden = true;
+    setAppStatus('PedalScape installed.');
+  }
+  deferredInstallPrompt = null;
 }
 
 function startHeroRoute() {
@@ -660,8 +909,15 @@ function bindEvents() {
   });
 
   elements.startRideButton.addEventListener('click', startRide);
+  elements.installButton.addEventListener('click', installApp);
+  elements.resetDataButton.addEventListener('click', resetLocalData);
   elements.favoriteRouteButton.addEventListener('click', () => {
     if (state.selectedRoute) toggleFavorite(state.selectedRoute.id);
+  });
+  elements.candidateGrid.addEventListener('click', (event) => {
+    const copyButton = event.target.closest('.copy-source-button');
+    if (!copyButton) return;
+    copyCandidateSource(copyButton.dataset.sourceUrl);
   });
   elements.fullscreenButton.addEventListener('click', () => {
     if (!state.selectedRoute && routes.length > 0) selectRoute(routes[0].id);
@@ -670,6 +926,19 @@ function bindEvents() {
     requestFullscreen().catch(() => {
       elements.sourceLink.focus();
     });
+  });
+  document.addEventListener('fullscreenchange', updateFullscreenButton);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    elements.installButton.hidden = false;
+    setAppStatus('Install available for offline app shell.');
+  });
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    elements.installButton.hidden = true;
+    setAppStatus('PedalScape installed.');
   });
 }
 
@@ -688,6 +957,8 @@ async function loadCatalog() {
     state.catalogStatus = 'ready';
     state.favoriteRouteIds = new Set([...state.favoriteRouteIds].filter((routeId) => routes.some((route) => route.id === routeId)));
     state.recentRouteIds = state.recentRouteIds.filter((routeId) => routes.some((route) => route.id === routeId));
+    const storedRouteId = readStoredRouteId();
+    if (storedRouteId && !routes.some((route) => route.id === storedRouteId)) removeStoredRouteId();
     saveFavorites();
     saveRecentRoutes();
     populateFilters();
@@ -714,13 +985,55 @@ async function loadCatalog() {
   }
 }
 
+async function loadCandidateBacklog() {
+  state.candidateStatus = 'loading';
+  renderCandidates();
+
+  try {
+    const response = await fetch(candidateBacklogUrl, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Candidate backlog request failed: ${response.status}`);
+
+    const backlog = await response.json();
+    candidateRoutes = Array.isArray(backlog.candidateRoutes) ? backlog.candidateRoutes.map(normalizeCandidateRoute) : [];
+    state.candidateStatus = 'ready';
+    renderCandidates();
+  } catch (error) {
+    console.error(error);
+    candidateRoutes = [];
+    state.candidateStatus = 'error';
+    renderCandidates();
+  }
+}
+
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || window.location.protocol === 'file:') return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js').catch((error) => {
-      console.warn('Service worker registration skipped.', error);
+    const hadController = Boolean(navigator.serviceWorker.controller);
+    let serviceWorkerRefreshing = false;
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || serviceWorkerRefreshing) return;
+      serviceWorkerRefreshing = true;
+      window.location.reload();
     });
+
+    navigator.serviceWorker.register('service-worker.js')
+      .then((registration) => {
+        registration.addEventListener('updatefound', () => {
+          const worker = registration.installing;
+          if (!worker) return;
+
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              setAppStatus('Update ready. Refreshing PedalScape…');
+            }
+          });
+        });
+      })
+      .catch((error) => {
+        console.warn('Service worker registration skipped.', error);
+      });
   });
 }
 
@@ -728,6 +1041,7 @@ function init() {
   loadLocalState();
   bindEvents();
   loadCatalog();
+  loadCandidateBacklog();
   registerServiceWorker();
 }
 

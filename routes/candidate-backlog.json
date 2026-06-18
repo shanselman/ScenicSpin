@@ -90,9 +90,9 @@
     },
     {
       "id": "candidate-lake-como-bike-ride-italy-4k-36-miles-58-km-j_iqub",
-      "status": "candidate",
-      "curationTier": "backlog",
-      "promotionReadiness": "needs-review",
+      "status": "featured",
+      "curationTier": "featured",
+      "promotionReadiness": "promoted-to-production",
       "title": "Lake Como Bike Ride, Italy  - 4K - 36 Miles / 58 Km",
       "sourceUrl": "https://www.youtube.com/watch?v=J_IqUBVf9sQ",
       "embedUrl": "https://www.youtube-nocookie.com/embed/J_IqUBVf9sQ",
@@ -128,7 +128,9 @@
       },
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Do not download, proxy, mirror, or rehost. Specific license not independently verified.",
       "discoveredVia": "ytsearch:4K virtual cycling workout scenic ride no music",
-      "curationNotes": "Candidate backlog entry only. Do not surface in production catalog until reviewed and promoted."
+      "curationNotes": "Promoted into routes/catalog.json as part of the small visible-catalog expansion. Keep source/legal/embed checks current; do not download or rehost.",
+      "productionCatalogId": "lake-como-italy-36-mile-4k",
+      "promotedToCatalogAt": "2026-06-17"
     },
     {
       "id": "candidate-this-bike-trail-is-like-a-secret-paradise-hoz6m1",
@@ -214,9 +216,9 @@
     },
     {
       "id": "candidate-rallarvegen-norways-most-beautiful-ride-indoor-cycling-zluevd",
-      "status": "candidate",
-      "curationTier": "backlog",
-      "promotionReadiness": "needs-review",
+      "status": "featured",
+      "curationTier": "featured",
+      "promotionReadiness": "promoted-to-production",
       "title": "Rallarvegen - Norway's most beautiful ride? - Indoor Cycling Training",
       "sourceUrl": "https://www.youtube.com/watch?v=ZlUevdMLbhs",
       "embedUrl": "https://www.youtube-nocookie.com/embed/ZlUevdMLbhs",
@@ -251,13 +253,15 @@
       },
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Do not download, proxy, mirror, or rehost. Specific license not independently verified.",
       "discoveredVia": "ytsearch:Bike the World Indoor Cycling Training scenic ride",
-      "curationNotes": "Candidate backlog entry only. Do not surface in production catalog until reviewed and promoted."
+      "curationNotes": "Promoted into routes/catalog.json as part of the small visible-catalog expansion. Keep source/legal/embed checks current; do not download or rehost.",
+      "productionCatalogId": "rallarvegen-norway-indoor-cycling",
+      "promotedToCatalogAt": "2026-06-17"
     },
     {
       "id": "candidate-glencree-wicklow-mountains-4k-non-stop-virtual-bike-ri-eyoo__",
-      "status": "candidate",
-      "curationTier": "backlog",
-      "promotionReadiness": "needs-review",
+      "status": "featured",
+      "curationTier": "featured",
+      "promotionReadiness": "promoted-to-production",
       "title": "Glencree Wicklow Mountains : 4K Non Stop Virtual Bike Ride Ireland",
       "sourceUrl": "https://www.youtube.com/watch?v=EYOo__k_I4M",
       "embedUrl": "https://www.youtube-nocookie.com/embed/EYOo__k_I4M",
@@ -292,13 +296,15 @@
       },
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Do not download, proxy, mirror, or rehost. Specific license not independently verified.",
       "discoveredVia": "ytsearch:4K virtual cycling workout scenic ride no music",
-      "curationNotes": "Candidate backlog entry only. Do not surface in production catalog until reviewed and promoted."
+      "curationNotes": "Promoted into routes/catalog.json as part of the small visible-catalog expansion. Keep source/legal/embed checks current; do not download or rehost.",
+      "productionCatalogId": "glencree-wicklow-mountains-ireland-4k",
+      "promotedToCatalogAt": "2026-06-17"
     },
     {
       "id": "candidate-crossing-picos-de-europa-indoor-cycling-training-07htcb",
-      "status": "candidate",
-      "curationTier": "backlog",
-      "promotionReadiness": "needs-review",
+      "status": "featured",
+      "curationTier": "featured",
+      "promotionReadiness": "promoted-to-production",
       "title": "Crossing Picos de Europa - Indoor Cycling Training",
       "sourceUrl": "https://www.youtube.com/watch?v=07hTCBH8goQ",
       "embedUrl": "https://www.youtube-nocookie.com/embed/07hTCBH8goQ",
@@ -333,7 +339,9 @@
       },
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Do not download, proxy, mirror, or rehost. Specific license not independently verified.",
       "discoveredVia": "ytsearch:Bike the World Indoor Cycling Training scenic ride",
-      "curationNotes": "Candidate backlog entry only. Do not surface in production catalog until reviewed and promoted."
+      "curationNotes": "Promoted into routes/catalog.json as part of the small visible-catalog expansion. Keep source/legal/embed checks current; do not download or rehost.",
+      "productionCatalogId": "picos-de-europa-spain-indoor-cycling",
+      "promotedToCatalogAt": "2026-06-17"
     },
     {
       "id": "candidate-oldedalen-from-stryn-norway-indoor-cycling-training-w3m_fk",
@@ -871,9 +879,9 @@
     },
     {
       "id": "candidate-the-world-heritage-windmills-of-kinderdijk-netherlands-y1dus4",
-      "status": "candidate",
-      "curationTier": "backlog",
-      "promotionReadiness": "needs-review",
+      "status": "featured",
+      "curationTier": "featured",
+      "promotionReadiness": "promoted-to-production",
       "title": "The World Heritage Windmills of Kinderdijk (Netherlands) - Indoor Cycling Training",
       "sourceUrl": "https://www.youtube.com/watch?v=y1dUs4xiNBg",
       "embedUrl": "https://www.youtube-nocookie.com/embed/y1dUs4xiNBg",
@@ -908,7 +916,9 @@
       },
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Do not download, proxy, mirror, or rehost. Specific license not independently verified.",
       "discoveredVia": "ytsearch:Bike the World Indoor Cycling Training scenic ride",
-      "curationNotes": "Candidate backlog entry only. Do not surface in production catalog until reviewed and promoted."
+      "curationNotes": "Promoted into routes/catalog.json as part of the small visible-catalog expansion. Keep source/legal/embed checks current; do not download or rehost.",
+      "productionCatalogId": "kinderdijk-windmills-netherlands-indoor-cycling",
+      "promotedToCatalogAt": "2026-06-17"
     },
     {
       "id": "candidate-monte-grappa-italys-mont-ventoux-indoor-cycling-traini-uyefe3",
@@ -1117,9 +1127,9 @@
     },
     {
       "id": "candidate-81-4k-colorado-national-monument-bike-ride-4k-xjtk4w",
-      "status": "candidate",
-      "curationTier": "backlog",
-      "promotionReadiness": "needs-review",
+      "status": "featured",
+      "curationTier": "featured",
+      "promotionReadiness": "promoted-to-production",
       "title": "[81] 4K Colorado National Monument Bike Ride 4K",
       "sourceUrl": "https://www.youtube.com/watch?v=xJTk4whDF30",
       "embedUrl": "https://www.youtube-nocookie.com/embed/xJTk4whDF30",
@@ -1154,7 +1164,9 @@
       },
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Do not download, proxy, mirror, or rehost. Specific license not independently verified.",
       "discoveredVia": "ytsearch:Jerry's Scenic Indoor Cycling 4K ride",
-      "curationNotes": "Candidate backlog entry only. Do not surface in production catalog until reviewed and promoted."
+      "curationNotes": "Promoted into routes/catalog.json as part of the small visible-catalog expansion. Keep source/legal/embed checks current; do not download or rehost.",
+      "productionCatalogId": "colorado-national-monument-bike-ride-4k",
+      "promotedToCatalogAt": "2026-06-17"
     },
     {
       "id": "candidate-80-4k-crystal-river-bike-path-northbound-to-glenwood-s-zjdveu",
