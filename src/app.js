@@ -171,7 +171,7 @@ function cleanAudioBadge(route) {
   if (/natural|ambient|soundscape|road|trail|no music/.test(combined)) return 'Natural audio';
   if (/music/.test(audio)) return 'Music';
   if (/narrat|voice|spoken|commentary/.test(audio)) return 'Narration';
-  if (/creator|original|video audio|training video audio|tour video audio|indoor cycling video audio/.test(combined)) return 'Original audio';
+  if (/creator|original|video audio|training video audio|tour video audio|indoor cycling video audio/.test(combined)) return '';
   return audio ? titleCase(audio.split(/[;,]/)[0].trim()) : '';
 }
 
