@@ -852,11 +852,22 @@ a:focus-visible {
   transform: scale(1.08);
 }
 
-.card-badge {
+.route-card-badges {
   position: absolute;
   right: 0.9rem;
   bottom: 0.9rem;
+  left: 0.9rem;
   z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.route-card-badges li {
   border-radius: 999px;
   padding: 0.45rem 0.7rem;
   background: rgba(6, 19, 24, 0.78);

@@ -60,6 +60,32 @@ test('loads the production JSON route catalog and exposes PWA assets', async ({ 
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', 'icons/apple-touch-icon.png');
 });
 
+test('production route cards show clean media badges without review metadata', async ({ page, request }) => {
+  const catalogResponse = await request.get('/routes/catalog.json');
+  const catalog = await catalogResponse.json();
+  const routeWithReviewMetadata = {
+    ...catalog.routes[0],
+    title: 'Rallarvegen Norway Virtual Cycling Route',
+    videoQuality: 'HD/4K training video; verify playback quality before launch',
+    audio: 'creator training video audio; verify before launch'
+  };
+  await page.route('**/routes/catalog.json', (route) => route.fulfill({
+    json: { ...catalog, routes: [routeWithReviewMetadata] }
+  }));
+
+  await loadCatalog(page);
+
+  const productionGrid = page.locator('#routeGrid');
+  await expect(productionGrid).not.toContainText(/verify playback|before launch|training video; verify/i);
+
+  const card = page.locator('.route-card').filter({ hasText: routeWithReviewMetadata.title }).first();
+  await expect(card.locator('.route-card-badges li')).toContainText(['4K', 'Original audio']);
+
+  const thumbnailAlt = await card.locator('img').getAttribute('alt');
+  expect(thumbnailAlt).toBe(`Scenic preview for ${routeWithReviewMetadata.title}.`);
+  expect(thumbnailAlt).not.toMatch(/4K|HD|verify|before launch/i);
+});
+
 test('candidate backlog stays hidden until review mode and exports local decisions', async ({ page, request }) => {
   const backlogResponse = await request.get('/routes/candidate-backlog.json');
   expect(backlogResponse.ok()).toBeTruthy();

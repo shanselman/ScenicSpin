@@ -133,6 +133,63 @@ function getYouTubeThumbnail(videoId, quality = 'hqdefault') {
   return `https://i.ytimg.com/vi/${encodeURIComponent(videoId)}/${quality}.jpg`;
 }
 
+
+function normalizeWhitespace(value) {
+  return String(value ?? '').replace(/\s+/g, ' ').trim();
+}
+
+function stripReviewerOnlyText(value) {
+  const text = normalizeWhitespace(value);
+  if (!text) return '';
+
+  return text
+    .split(/(?<=[.;])\s+|\s*[;|]\s*/)
+    .map((part) => part.trim())
+    .filter((part) => part && !/(?:verify|reviewer|candidate backlog|promoted from candidate|aggressively promoted|before launch|oembed resolved|do not download|do not rehost|licensing\/platform playback)/i.test(part))
+    .join(' ')
+    .replace(/\s+([,.;:])/g, '$1')
+    .trim();
+}
+
+function cleanPublicText(value, fallback = '') {
+  return stripReviewerOnlyText(value) || fallback;
+}
+
+function cleanQualityBadges(route) {
+  const text = `${route.videoQuality || ''} ${route.title || ''} ${Array.isArray(route.sceneryTags) ? route.sceneryTags.join(' ') : ''}`.toLowerCase();
+
+  if (/\b4k\b|2160p|uhd/.test(text)) return ['4K'];
+  if (/1080p|full\s*hd/.test(text)) return ['1080p'];
+  if (/\bhd\b|720p/.test(text)) return ['HD'];
+  return [];
+}
+
+function cleanAudioBadge(route) {
+  const audio = cleanPublicText(route.audio).toLowerCase();
+  const combined = `${route.audio || ''} ${route.title || ''}`.toLowerCase();
+
+  if (/natural|ambient|soundscape|road|trail|no music/.test(combined)) return 'Natural audio';
+  if (/music/.test(audio)) return 'Music';
+  if (/narrat|voice|spoken|commentary/.test(audio)) return 'Narration';
+  if (/creator|original|video audio|training video audio|tour video audio|indoor cycling video audio/.test(combined)) return 'Original audio';
+  return audio ? titleCase(audio.split(/[;,]/)[0].trim()) : '';
+}
+
+function uniqueList(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function getRouteMediaBadges(route) {
+  return uniqueList([
+    ...cleanQualityBadges(route),
+    cleanAudioBadge(route)
+  ]);
+}
+
+function getThumbnailAltText(route) {
+  return `Scenic preview for ${route.title}.`;
+}
+
 function readStoredRouteId() {
   const storages = [sessionStorage, localStorage];
 
@@ -492,15 +549,26 @@ function isYouTubeRoute(route) {
 }
 
 function normalizeRoute(route) {
-  const sceneryTags = Array.isArray(route.sceneryTags) ? route.sceneryTags : [];
-  const difficulty = route.difficulty ? titleCase(route.difficulty) : 'Unrated';
+  const sceneryTags = Array.isArray(route.sceneryTags)
+    ? route.sceneryTags.map((tag) => cleanPublicText(tag)).filter(Boolean)
+    : [];
+  const difficulty = route.difficulty ? titleCase(cleanPublicText(route.difficulty, route.difficulty)) : 'Unrated';
   const youtubeRoute = isYouTubeRoute(route);
   const videoId = youtubeRoute ? extractYouTubeId(route) : null;
   const thumbnailUrl = route.thumbnailUrl || route.imageUrl || getYouTubeThumbnail(videoId, 'hqdefault');
   const thumbnailFallbackUrl = youtubeRoute && videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : '';
+  const title = cleanPublicText(route.title, 'Untitled ride');
+  const location = cleanPublicText(route.location, 'Location to be announced');
+  const terrain = cleanPublicText(route.terrain, 'Scenic cycling route');
+  const creator = cleanPublicText(route.creator, 'Public video source');
+  const mediaBadges = getRouteMediaBadges({ ...route, title, sceneryTags });
 
   return {
     ...route,
+    title,
+    location,
+    terrain,
+    creator,
     durationLabel: formatDuration(route.durationMinutes),
     scenery: sceneryTags[0] ? titleCase(sceneryTags[0]) : 'Scenic',
     sceneryTags,
@@ -509,9 +577,13 @@ function normalizeRoute(route) {
     videoId,
     thumbnailUrl,
     thumbnailFallbackUrl,
-    description: `${route.terrain || 'Scenic cycling route'} • ${route.creator || 'Public video source'}`
+    mediaBadges,
+    videoQualityBadge: mediaBadges.find((badge) => /^(?:4K|1080p|HD)$/.test(badge)) || '',
+    audioBadge: mediaBadges.find((badge) => /audio|music|narration/i.test(badge)) || '',
+    description: `${terrain} • ${creator}`
   };
 }
+
 
 function normalizeCandidateRoute(route) {
   const normalizedRoute = normalizeRoute(route);
@@ -676,9 +748,8 @@ function routeMatches(route) {
     route.location,
     route.terrain,
     route.creator,
-    route.videoQuality,
-    route.audio,
-    route.cameraStyle,
+    route.mediaBadges.join(' '),
+    cleanPublicText(route.cameraStyle),
     route.sceneryTags.join(' '),
     route.intensity
   ]
@@ -834,6 +905,9 @@ function renderCatalog() {
       .slice(0, 2)
       .map((tag) => `<li>${escapeHtml(titleCase(tag))}</li>`)
       .join('');
+    const mediaBadges = (route.mediaBadges?.length ? route.mediaBadges : ['Video'])
+      .map((badge) => `<li>${escapeHtml(badge)}</li>`)
+      .join('');
     card.className = `route-card ${state.selectedRoute?.id === route.id ? 'selected-card' : ''}`;
     card.tabIndex = 0;
     card.setAttribute('role', 'button');
@@ -843,10 +917,10 @@ function renderCatalog() {
       <div class="card-art">
         ${
           route.thumbnailUrl
-            ? `<img src="${escapeHtml(route.thumbnailUrl)}" alt="Scenic preview for ${escapeHtml(route.title)}" loading="lazy" data-fallback="${escapeHtml(route.thumbnailFallbackUrl)}">`
+            ? `<img src="${escapeHtml(route.thumbnailUrl)}" alt="${escapeHtml(getThumbnailAltText(route))}" loading="lazy" data-fallback="${escapeHtml(route.thumbnailFallbackUrl)}">`
             : `<span aria-hidden="true">${escapeHtml(route.scenery)}</span>`
         }
-        <span class="card-badge">${escapeHtml(route.videoQuality || 'Video')}</span>
+        <ul class="route-card-badges" aria-label="Video and audio badges">${mediaBadges}</ul>
         <button class="favorite-card-button ${isFavorite(route.id) ? 'is-favorite' : ''}" type="button" aria-pressed="${isFavorite(route.id) ? 'true' : 'false'}" aria-label="${isFavorite(route.id) ? 'Remove favorite' : 'Save favorite'}: ${escapeHtml(route.title)}">
           ${isFavorite(route.id) ? '★' : '☆'}
         </button>
@@ -1058,14 +1132,14 @@ function renderSelectedRoute() {
   }
 
   elements.selectedTitle.textContent = route.title;
-  elements.selectedDescription.textContent = route.curationNotes || route.description;
+  elements.selectedDescription.textContent = route.description;
   elements.selectedMetadata.innerHTML = `
     <div><dt>Duration</dt><dd>${escapeHtml(route.durationLabel)}</dd></div>
     <div><dt>Difficulty</dt><dd>${escapeHtml(route.intensity)}</dd></div>
     <div><dt>Terrain</dt><dd>${escapeHtml(route.terrain || 'Not specified')}</dd></div>
     <div><dt>Location</dt><dd>${escapeHtml(route.location)}</dd></div>
     <div><dt>Creator</dt><dd>${escapeHtml(route.creator || 'Unknown')}</dd></div>
-    <div><dt>Video</dt><dd>${escapeHtml(route.videoQuality || 'Unknown')} · ${escapeHtml(route.audio || 'Audio varies')}</dd></div>
+    <div><dt>Video</dt><dd>${escapeHtml((route.mediaBadges?.length ? route.mediaBadges : ['Video']).join(' · '))}</dd></div>
   `;
   elements.startRideButton.disabled = !route.embeddingAllowed;
   elements.favoriteRouteButton.disabled = false;
