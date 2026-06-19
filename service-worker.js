@@ -1,8 +1,8 @@
 // Bump shellVersion whenever the app shell assets change. The ?v= query below
 // must stay in sync with the matching references in index.html so the new shell
 // is fetched and the previous cache (keyed by version) is cleaned on activate.
-const shellVersion = '4';
-const cacheName = `pedalscape-shell-v${shellVersion}`;
+const shellVersion = '{{SHELL_VERSION}}';
+const cacheName = `{{CACHE_NAME}}-v${shellVersion}`;
 const shellAssets = [
   './',
   './index.html',

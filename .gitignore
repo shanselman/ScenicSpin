@@ -15,3 +15,4 @@ playwright-report/
 .lh-temp/
 lh-report.json
 lh-pwa-report.json
+dist/

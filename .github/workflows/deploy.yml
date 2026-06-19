@@ -1,0 +1,38 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        site: [pedalscape, beltscape]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build ${{ matrix.site }}
+        run: node scripts/build.js ${{ matrix.site }}
+
+      - name: Deploy to ${{ matrix.site }} repo
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          cd dist/${{ matrix.site }}
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy ${{ matrix.site }} from ${{ github.repository }}@${{ github.sha }}"
+          git push --force \
+            "https://x-access-token:${DEPLOY_TOKEN}@github.com/shanselman/${{ matrix.site }}.git" \
+            HEAD:main

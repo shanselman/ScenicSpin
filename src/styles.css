@@ -1,16 +1,16 @@
 :root {
   color-scheme: dark;
-  --bg: #061318;
-  --panel: #0d2229;
-  --panel-strong: #14333d;
+  --bg: {{BG_COLOR}};
+  --panel: {{PANEL_COLOR}};
+  --panel-strong: {{PANEL_STRONG}};
   --text: #f1fbfd;
   --muted: #a9c2c9;
-  --accent: #38e8a4;
-  --accent-strong: #0bbf83;
+  --accent: {{ACCENT_COLOR}};
+  --accent-strong: {{ACCENT_STRONG}};
   --sky: #68d8ff;
   --sunset: #ffb86b;
   --warning: #f7c873;
-  --ring: rgba(56, 232, 164, 0.38);
+  --ring: {{ACCENT_RING}};
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -29,7 +29,7 @@ body {
   background:
     radial-gradient(circle at 18% 12%, rgba(104, 216, 255, 0.24), transparent 28rem),
     radial-gradient(circle at 88% 6%, rgba(255, 184, 107, 0.18), transparent 24rem),
-    linear-gradient(135deg, #061318 0%, #0b1b24 48%, #071016 100%);
+    linear-gradient(135deg, {{BG_COLOR}} 0%, #0b1b24 48%, #071016 100%);
   color: var(--text);
 }
 
@@ -76,7 +76,7 @@ main,
   width: 2.75rem;
   height: 2.75rem;
   border-radius: 1rem;
-  box-shadow: 0 12px 36px rgba(56, 232, 164, 0.26);
+  box-shadow: 0 12px 36px {{ACCENT_BRAND_SHADOW}};
   flex: 0 0 auto;
 }
 
@@ -223,7 +223,7 @@ h3 {
   width: 100%;
   height: 100%;
   place-items: center;
-  color: #03221a;
+  color: {{ACCENT_FG_ALT}};
   font-size: 3rem;
   font-weight: 900;
   letter-spacing: -0.07em;
@@ -285,7 +285,7 @@ h3 {
 }
 
 .quick-links a:hover {
-  border-color: rgba(56, 232, 164, 0.54);
+  border-color: {{ACCENT_RING_MED}};
   color: var(--text);
 }
 
@@ -395,8 +395,8 @@ textarea {
 }
 
 .toggle-field:has(input:checked) {
-  border-color: rgba(56, 232, 164, 0.68);
-  box-shadow: inset 0 0 0 1px rgba(56, 232, 164, 0.24);
+  border-color: {{ACCENT_RING_STRONG}};
+  box-shadow: inset 0 0 0 1px {{ACCENT_RING_FAINT}};
 }
 
 .local-panel {
@@ -466,7 +466,7 @@ textarea {
 
 .recent-route-button:hover,
 .favorite-card-button:hover {
-  border-color: rgba(56, 232, 164, 0.68);
+  border-color: {{ACCENT_RING_STRONG}};
 }
 
 input:focus,
@@ -702,7 +702,7 @@ a:focus-visible {
 }
 
 .candidate-badges li {
-  border: 1px solid rgba(56, 232, 164, 0.28);
+  border: 1px solid {{ACCENT_RING_LIGHT}};
   border-radius: 999px;
   padding: 0.4rem 0.62rem;
   background: rgba(56, 232, 164, 0.1);
@@ -822,7 +822,7 @@ a:focus-visible {
 .route-card:hover,
 .route-card:focus-visible {
   transform: translateY(-4px);
-  border-color: rgba(56, 232, 164, 0.68);
+  border-color: {{ACCENT_RING_STRONG}};
   box-shadow: 0 26px 90px rgba(0, 0, 0, 0.44), 0 0 0 1px rgba(56, 232, 164, 0.2);
 }
 
@@ -838,7 +838,7 @@ a:focus-visible {
   background:
     linear-gradient(145deg, rgba(56, 232, 164, 0.88), rgba(16, 113, 157, 0.68)),
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.9), transparent 8rem);
-  color: #03221a;
+  color: {{ACCENT_FG_ALT}};
   font-size: 2.35rem;
   font-weight: 900;
   letter-spacing: -0.07em;
@@ -1005,7 +1005,7 @@ a:focus-visible {
   place-items: center;
   border-radius: 999px;
   background: var(--accent);
-  color: #062017;
+  color: {{ACCENT_FG}};
   font-size: 2rem;
 }
 
@@ -1060,7 +1060,7 @@ a:focus-visible {
 
 .primary-button {
   background: var(--accent);
-  color: #062017;
+  color: {{ACCENT_FG}};
 }
 
 .primary-button:hover {

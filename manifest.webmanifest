@@ -1,14 +1,14 @@
 {
-  "name": "PedalScape",
-  "short_name": "PedalScape",
-  "description": "A no-login scenic cycling PWA with local favorites and ride history.",
+  "name": "{{SITE_NAME}}",
+  "short_name": "{{SITE_NAME}}",
+  "description": "{{MANIFEST_DESC}}",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#061318",
-  "theme_color": "#061318",
+  "background_color": "{{BG_COLOR}}",
+  "theme_color": "{{THEME_COLOR}}",
   "categories": ["fitness", "health", "lifestyle"],
   "icons": [
     {

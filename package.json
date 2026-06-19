@@ -6,7 +6,12 @@
   "scripts": {
     "start": "python -m http.server 5173 --bind 127.0.0.1",
     "check": "node --check src/app.js",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build:pedalscape": "node scripts/build.js pedalscape",
+    "build:beltscape": "node scripts/build.js beltscape",
+    "build:all": "node scripts/build.js pedalscape && node scripts/build.js beltscape",
+    "preview:pedalscape": "cd dist/pedalscape && python3 -m http.server 5173 --bind 127.0.0.1",
+    "preview:beltscape": "cd dist/beltscape && python3 -m http.server 5174 --bind 127.0.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.0"
