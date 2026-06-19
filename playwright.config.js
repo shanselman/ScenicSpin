@@ -8,9 +8,11 @@ const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
 const siteConfig = {
   siteName: config.siteName,
+  siteSlug: config.siteSlug,
   activityNoun: config.activityNoun,
   activityNounSingular: config.activityNounSingular,
   bgColor: config.bgColor,
+  themeColor: config.themeColor,
   cacheName: config.cacheName,
 };
 

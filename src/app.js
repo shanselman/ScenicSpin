@@ -8,9 +8,9 @@ const selectedRouteStorageKey = 'scenicRideCatalog.selectedRouteId';
 const favoriteRoutesStorageKey = 'scenicRideCatalog.favoriteRouteIds';
 const recentRoutesStorageKey = 'scenicRideCatalog.recentRouteIds';
 const filterPreferencesStorageKey = 'scenicRideCatalog.filterPreferences';
-const candidateReviewDecisionsStorageKey = 'PedalScape.reviewDecisions';
+const candidateReviewDecisionsStorageKey = '{{SITE_NAME}}.reviewDecisions';
 const localBackupSchemaVersion = 1;
-const localBackupAppName = 'PedalScape';
+const localBackupAppName = '{{SITE_NAME}}';
 const localStorageKeys = [
   selectedRouteStorageKey,
   favoriteRoutesStorageKey,
@@ -540,7 +540,7 @@ function validateLocalBackup(backup) {
     throw new Error('Backup must be a JSON object.');
   }
   if (backup.app !== localBackupAppName) {
-    throw new Error('Backup is not for PedalScape.');
+    throw new Error('Backup is not for {{SITE_NAME}}.');
   }
   if (backup.schemaVersion !== localBackupSchemaVersion) {
     throw new Error(`Unsupported backup version: ${backup.schemaVersion ?? 'missing'}.`);
@@ -771,7 +771,7 @@ function buildReviewDecisionExport() {
 async function copyReviewDecisions() {
   const decisions = buildReviewDecisionExport();
   const exportText = JSON.stringify({
-    app: 'PedalScape',
+    app: '{{SITE_NAME}}',
     exportedAt: new Date().toISOString(),
     reviewDecisions: decisions
   }, null, 2);
@@ -1411,7 +1411,7 @@ async function installApp() {
   const result = await deferredInstallPrompt.userChoice;
   if (result.outcome === 'accepted') {
     elements.installButton.hidden = true;
-    setAppStatus('PedalScape installed.');
+    setAppStatus('{{SITE_NAME}} installed.');
   }
   deferredInstallPrompt = null;
 }
@@ -1520,7 +1520,7 @@ function bindEvents() {
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     elements.installButton.hidden = true;
-    setAppStatus('PedalScape installed.');
+    setAppStatus('{{SITE_NAME}} installed.');
   });
   window.addEventListener('hashchange', applyReviewModeFromUrl);
 }
@@ -1605,7 +1605,7 @@ function registerServiceWorker() {
 
           worker.addEventListener('statechange', () => {
             if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-              setAppStatus('Update ready. Refreshing PedalScape…');
+              setAppStatus('Update ready. Refreshing {{SITE_NAME}}…');
             }
           });
         });

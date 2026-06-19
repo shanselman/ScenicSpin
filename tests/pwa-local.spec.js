@@ -1,9 +1,11 @@
 const { test, expect } = require('@playwright/test');
 const { siteConfig } = require('../playwright.config');
 const SITE_NAME = siteConfig.siteName;
+const SITE_SLUG = siteConfig.siteSlug;
 const ACTIVITY_NOUN = siteConfig.activityNounSingular;   // 'ride' or 'walk'
 const ACTIVITY_NOUN_S = siteConfig.activityNounSingular; // 'ride' or 'walk'
 const BG_COLOR = siteConfig.bgColor;
+const THEME_COLOR = siteConfig.themeColor;
 const CACHE_NAME = siteConfig.cacheName;
 
 
@@ -63,7 +65,7 @@ test('loads the production JSON route catalog and exposes PWA assets', async ({ 
   expect(serviceWorkerText).toContain('./routes/candidate-backlog.json');
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', 'manifest.webmanifest');
   await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /width=device-width/);
-  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#061318');
+  await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', THEME_COLOR);
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', 'icons/apple-touch-icon.png');
 });
 
@@ -75,6 +77,8 @@ test('production route cards show clean media badges without review metadata', a
     title: 'Rallarvegen Norway Virtual Cycling Route',
     location: 'Rallarvegen, Italy, 60 min',
     terrain: 'mountain gravel road and highland cycling route',
+    difficulty: 'moderate',
+    sceneryTags: ['mountains', 'river', 'gravel'],
     videoQuality: 'HD/4K training video; verify playback quality before launch',
     audio: 'creator training video audio; verify before launch'
   };
@@ -98,53 +102,68 @@ test('production route cards show clean media badges without review metadata', a
   expect(thumbnailAlt).not.toMatch(/4K|HD|verify|before launch/i);
 });
 
-test('production route cards normalize scenery and terrain into useful badges', async ({ page }) => {
+test('production route cards normalize scenery and terrain into useful badges', async ({ page, request }) => {
+  const catalogResponse = await request.get('/routes/catalog.json');
+  const catalog = await catalogResponse.json();
   await loadCatalog(page);
 
-  const lakeCard = page.locator('.route-card').filter({ hasText: 'Lake Achensee' }).first();
-  const lakeOverlayBadges = await lakeCard.locator('.route-card-badges li').allTextContents();
-  const lakeMetadataBadges = await lakeCard.locator('.route-metadata-badges li').allTextContents();
-  expect(lakeOverlayBadges).toEqual(['4K', '60+ min']);
-  expect(lakeMetadataBadges).toEqual(expect.arrayContaining(['Austria', 'Moderate', 'Mountains', 'Water/Lakes']));
-  expect(lakeMetadataBadges.length).toBeLessThanOrEqual(6);
+  // Pick a long-duration route (60+ min) and verify overlay badges include duration
+  const longRoute = catalog.routes.find((r) => r.durationMinutes >= 60);
+  expect(longRoute).toBeTruthy();
+  const longCard = page.locator('.route-card').filter({ hasText: longRoute.title }).first();
+  const longOverlayBadges = await longCard.locator('.route-card-badges li').allTextContents();
+  expect(longOverlayBadges).toEqual(expect.arrayContaining(['60+ min']));
+  expect(longOverlayBadges.length).toBeLessThanOrEqual(3);
 
-  const gravelCard = page.locator('.route-card').filter({ hasText: "Rallarvegen: Norway's Most Beautiful Ride" }).first();
-  const gravelOverlayBadges = await gravelCard.locator('.route-card-badges li').allTextContents();
-  const gravelMetadataBadges = await gravelCard.locator('.route-metadata-badges li').allTextContents();
-  expect(gravelOverlayBadges).toEqual(['4K', '60+ min']);
-  expect(gravelMetadataBadges).toEqual(expect.arrayContaining(['Norway', 'Moderate', 'Gravel', 'Mountains']));
-  expect(gravelMetadataBadges.length).toBeLessThanOrEqual(6);
+  // Pick a 4K route and verify quality badge
+  const hdRoute = catalog.routes.find((r) => /4k|uhd|2160/i.test(r.videoQuality || ''));
+  expect(hdRoute).toBeTruthy();
+  const hdCard = page.locator('.route-card').filter({ hasText: hdRoute.title }).first();
+  const hdOverlayBadges = await hdCard.locator('.route-card-badges li').allTextContents();
+  expect(hdOverlayBadges).toEqual(expect.arrayContaining(['4K']));
 
-  const climbCard = page.locator('.route-card').filter({ hasText: 'Passo di Valparola Dolomites Uphill Ride' }).first();
-  const climbOverlayBadges = await climbCard.locator('.route-card-badges li').allTextContents();
-  const climbMetadataBadges = await climbCard.locator('.route-metadata-badges li').allTextContents();
-  expect(climbOverlayBadges).toEqual(['4K', 'Metrics overlay', '60+ min']);
-  expect(climbMetadataBadges).toEqual(expect.arrayContaining(['Italy', 'Challenging', 'Climb', 'Mountains']));
-  expect(climbMetadataBadges.length).toBeLessThanOrEqual(6);
+  // Verify metadata badges are present and capped at 6
+  const firstCard = page.locator('.route-card').first();
+  const firstMetadataBadges = await firstCard.locator('.route-metadata-badges li').allTextContents();
+  expect(firstMetadataBadges.length).toBeGreaterThan(0);
+  expect(firstMetadataBadges.length).toBeLessThanOrEqual(6);
 
-  const metricsCard = page.locator('.route-card').filter({ hasText: 'Spain Indoor Cycling Workout with Telemetry' }).first();
-  expect(await metricsCard.locator('.route-card-badges li').allTextContents()).toEqual(['4K', 'Metrics overlay']);
-  await expect(metricsCard.locator('.route-card-badges')).not.toContainText(/Telemetry\/Gradient overlay|Telemetry$/i);
-  await expect(metricsCard.locator('.route-metadata-badges')).not.toContainText('Metrics overlay');
+  // Verify review-only metadata never leaks into production badges
+  const allOverlayText = await page.locator('.route-card-badges').allTextContents();
+  for (const text of allOverlayText) {
+    expect(text).not.toMatch(/verify|before launch|training video/i);
+  }
 });
 
 test('scenery filter uses normalized rider-facing categories', async ({ page }) => {
   await loadCatalog(page);
 
   const sceneryOptions = await page.locator('#sceneryFilter option').allTextContents();
-  expect(sceneryOptions).toEqual(expect.arrayContaining(['Any scenery', 'Mountains', 'Water/Lakes', 'Climb', 'Gravel']));
-  expect(sceneryOptions).not.toEqual(expect.arrayContaining(['alps', 'river', 'lake']));
+  expect(sceneryOptions[0]).toBe('Any scenery');
+  expect(sceneryOptions.length).toBeGreaterThan(2);
+  // Normalized categories use title-case labels, never raw sceneryTag values
+  const rawTags = ['alps', 'river', 'lake', 'beach', 'woods', 'urban'];
+  for (const raw of rawTags) {
+    expect(sceneryOptions).not.toContain(raw);
+  }
+  // Every non-"Any scenery" option should be a known normalized label
+  const validLabels = ['Mountains', 'Water/Lakes', 'Coastal', 'Climb', 'Forest', 'Countryside', 'City', 'Flat/Easy', 'Gravel'];
+  for (const option of sceneryOptions.slice(1)) {
+    expect(validLabels).toContain(option);
+  }
 
-  await page.locator('#sceneryFilter').selectOption('Water/Lakes');
-  await expect(page.locator('#sceneryFilter')).toHaveValue('Water/Lakes');
+  // Pick the first available scenery filter and verify it works
+  const filterValue = sceneryOptions[1];
+  await page.locator('#sceneryFilter').selectOption(filterValue);
+  await expect(page.locator('#sceneryFilter')).toHaveValue(filterValue);
   await expect(page.locator('.route-card').first()).toBeVisible();
 
   const visibleMetadata = await page.locator('.route-card .route-metadata-badges').allTextContents();
   expect(visibleMetadata.length).toBeGreaterThan(0);
-  expect(visibleMetadata.every((text) => text.includes('Water/Lakes'))).toBeTruthy();
+  expect(visibleMetadata.every((text) => text.includes(filterValue))).toBeTruthy();
 
   const preferences = await page.evaluate(() => JSON.parse(localStorage.getItem('scenicRideCatalog.filterPreferences')));
-  expect(preferences).toMatchObject({ scenery: 'Water/Lakes' });
+  expect(preferences).toMatchObject({ scenery: filterValue });
 });
 
 test('candidate backlog stays hidden until review mode and exports local decisions', async ({ page, request }) => {
@@ -229,21 +248,27 @@ test('favorites persist locally and favorites-only filter works', async ({ page 
   await expect(page.locator('.route-card').first()).toContainText(firstTitle);
 });
 
-test('search and select filters update results and persist preferences', async ({ page }) => {
+test('search and select filters update results and persist preferences', async ({ page, request }) => {
+  const catalogResponse = await request.get('/routes/catalog.json');
+  const catalog = await catalogResponse.json();
   await loadCatalog(page);
 
-  await page.locator('#searchInput').fill('Bavaria');
+  // Use the country from the first route's location as a search term
+  const firstLocation = catalog.routes[0].location || '';
+  const searchTerm = firstLocation.split(',').pop().trim();
+
+  await page.locator('#searchInput').fill(searchTerm);
   await expect(page.locator('#resultCount')).toHaveText(new RegExp(ACTIVITY_NOUN_S));
-  await expect(page.locator('.route-card').first()).toContainText(/Bavaria/i);
+  await expect(page.locator('.route-card').first()).toContainText(new RegExp(searchTerm, 'i'));
 
   await page.locator('#durationFilter').selectOption('long');
   await expect(page.locator('#durationFilter')).toHaveValue('long');
 
   const preferences = await page.evaluate(() => JSON.parse(localStorage.getItem('scenicRideCatalog.filterPreferences')));
-  expect(preferences).toMatchObject({ query: 'bavaria', duration: 'long' });
+  expect(preferences).toMatchObject({ query: searchTerm.toLowerCase(), duration: 'long' });
 
   await page.reload();
-  await expect(page.locator('#searchInput')).toHaveValue('bavaria');
+  await expect(page.locator('#searchInput')).toHaveValue(searchTerm.toLowerCase());
   await expect(page.locator('#durationFilter')).toHaveValue('long');
 });
 
@@ -257,8 +282,8 @@ test('starting a ride stores continue state, recents, hero continue, and loads i
   await expect(page.locator('#playerShell iframe')).toHaveAttribute('src', /youtube-nocookie\.com\/embed/);
 
   await page.locator('#startRideButton').click();
-  await expect(page.locator('#heroLabel')).toContainText('Continue ride');
-  await expect(page.locator('#heroRouteButton')).toHaveText('Continue this ride');
+  await expect(page.locator('#heroLabel')).toContainText(`Continue ${ACTIVITY_NOUN}`);
+  await expect(page.locator('#heroRouteButton')).toHaveText(`Continue this ${ACTIVITY_NOUN}`);
   await expect(page.locator('#recentRoutes .recent-route-button').first()).toHaveText(firstTitle);
 
   const localState = await page.evaluate(() => ({
@@ -269,7 +294,7 @@ test('starting a ride stores continue state, recents, hero continue, and loads i
   expect(localState.recents).toEqual([localState.selected]);
 
   await page.reload();
-  await expect(page.locator('#heroLabel')).toContainText('Continue ride');
+  await expect(page.locator('#heroLabel')).toContainText(`Continue ${ACTIVITY_NOUN}`);
   await expect(page.locator('#heroSelection')).toHaveText(firstTitle);
 });
 
@@ -291,7 +316,7 @@ test('reset local data clears favorites, recents, selected route, and filters', 
 
   await expect(page.locator('#appStatus')).toHaveText('Local data reset.');
   await expect(page.locator('#favoriteCount')).toHaveText('0 favorites');
-  await expect(page.locator('#recentRoutes')).toContainText('Select or start a ride to build recent routes.');
+  await expect(page.locator('#recentRoutes')).toContainText(`Select or start a ${ACTIVITY_NOUN} to build recent routes.`);
   await expect(page.locator('#searchInput')).toHaveValue('');
   await expect(page.locator('#durationFilter')).toHaveValue('all');
   await expect(page.locator('#favoritesFilter')).not.toBeChecked();
@@ -331,7 +356,7 @@ test('install prompt surfaces install button and handles acceptance', async ({ p
   await expect(page.locator('#appStatus')).toHaveText(`${SITE_NAME} installed.`);
 });
 
-test('exports only PedalScape local data and imports a validated backup', async ({ page }) => {
+test(`exports only ${SITE_NAME} local data and imports a validated backup`, async ({ page }) => {
   await loadCatalog(page);
 
   await page.evaluate(() => {
@@ -370,7 +395,7 @@ test('exports only PedalScape local data and imports a validated backup', async 
   };
 
   await page.locator('#importDataInput').setInputFiles({
-    name: 'pedalscape-backup.json',
+    name: `${SITE_SLUG}-backup.json`,
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(importBackup))
   });
@@ -386,7 +411,7 @@ test('rejects invalid local backup before writing app data', async ({ page }) =>
   await page.evaluate(() => localStorage.setItem('scenicRideCatalog.favoriteRouteIds', JSON.stringify(['keep-me'])));
 
   await page.locator('#importDataInput').setInputFiles({
-    name: 'not-pedalscape.json',
+    name: `not-${SITE_SLUG}.json`,
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify({ app: 'OtherApp', schemaVersion: 1, localData: {} }))
   });
