@@ -1,6 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { siteConfig } = require('../playwright.config');
-const ACTIVITY_NOUN = siteConfig.activityNoun;
+const ACTIVITY_NOUN = siteConfig.activityNounSingular;    // 'ride' or 'walk'
 const ACTIVITY_NOUN_S = siteConfig.activityNounSingular;
 
 

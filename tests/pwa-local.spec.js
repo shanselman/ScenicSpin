@@ -1,7 +1,7 @@
 const { test, expect } = require('@playwright/test');
 const { siteConfig } = require('../playwright.config');
 const SITE_NAME = siteConfig.siteName;
-const ACTIVITY_NOUN = siteConfig.activityNoun;           // 'rides' or 'walks'
+const ACTIVITY_NOUN = siteConfig.activityNounSingular;   // 'ride' or 'walk'
 const ACTIVITY_NOUN_S = siteConfig.activityNounSingular; // 'ride' or 'walk'
 const BG_COLOR = siteConfig.bgColor;
 const CACHE_NAME = siteConfig.cacheName;
@@ -174,7 +174,7 @@ test('candidate backlog stays hidden until review mode and exports local decisio
   await page.locator('.candidate-card').first().locator('.candidate-note-input').fill('Looks like a strong fit.');
   await expect(page.locator('.candidate-card').first().locator('.review-decision-badge')).toHaveText('Promote/Yes');
   await expect
-    .poll(() => page.evaluate(() => localStorage.getItem(`${SITE_NAME}.reviewDecisions`)))
+    .poll(() => page.evaluate(key => localStorage.getItem(key), `${SITE_NAME}.reviewDecisions`))
     .toContain(backlog.candidateRoutes[0].id);
 
   const exportData = await page.evaluate(() => {
@@ -391,6 +391,6 @@ test('rejects invalid local backup before writing app data', async ({ page }) =>
     buffer: Buffer.from(JSON.stringify({ app: 'OtherApp', schemaVersion: 1, localData: {} }))
   });
 
-  await expect(page.locator('#appStatus')).toContainText('Import failed: `Backup is not for ${SITE_NAME}`.');
+  await expect(page.locator('#appStatus')).toContainText(`Import failed: \`Backup is not for ${SITE_NAME}\`.`);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('scenicRideCatalog.favoriteRouteIds')))).toEqual(['keep-me']);
 });
