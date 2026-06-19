@@ -57,6 +57,7 @@ const tokens = {
   '{{ACTIVITY_NOUN_SINGULAR_CAP}}': config.activityNounSingularCap,
   '{{ACTIVITY_VERB}}':            config.activityVerb,
   '{{ACTIVITY_VERB_CAP}}':        config.activityVerbCap,
+  '{{ACTIVITY_DEVICE}}':          config.activityDevice,
   '{{OG_IMAGE_FILE}}':       config.ogImageFile,
   '{{OG_IMAGE_ALT}}':        config.ogImageAlt,
   '{{MANIFEST_DESC}}':       config.manifestDescription,

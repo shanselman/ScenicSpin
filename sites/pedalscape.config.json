@@ -31,8 +31,13 @@
   "ogImageFile": "og-image.png",
   "ogImageAlt": "PedalScape scenic indoor cycling — Any bike. Any screen. Beautiful rides from home.",
   "manifestDescription": "A no-login scenic cycling PWA with local favorites and ride history.",
-  "manifestCategories": ["fitness", "health", "lifestyle"],
+  "manifestCategories": [
+    "fitness",
+    "health",
+    "lifestyle"
+  ],
   "sisterSiteName": "BeltScape",
   "sisterSiteUrl": "https://beltscape.com",
-  "sisterSiteActivity": "walking"
+  "sisterSiteActivity": "walking",
+  "activityDevice": "bike"
 }

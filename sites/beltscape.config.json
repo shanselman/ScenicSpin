@@ -31,8 +31,13 @@
   "ogImageFile": "og-image-beltscape.png",
   "ogImageAlt": "BeltScape scenic indoor walking — Any treadmill. Any screen. Beautiful walks from home.",
   "manifestDescription": "A no-login scenic walking PWA with local favorites and walk history.",
-  "manifestCategories": ["fitness", "health", "lifestyle"],
+  "manifestCategories": [
+    "fitness",
+    "health",
+    "lifestyle"
+  ],
   "sisterSiteName": "PedalScape",
   "sisterSiteUrl": "https://pedalscape.com",
-  "sisterSiteActivity": "cycling"
+  "sisterSiteActivity": "cycling",
+  "activityDevice": "treadmill"
 }
