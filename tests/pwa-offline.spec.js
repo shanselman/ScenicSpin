@@ -29,7 +29,7 @@ async function waitForServiceWorkerControl(page) {
 
 test('service worker keeps the app shell and route data usable offline', async ({ page, context }) => {
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(page.locator('#resultCount')).toHaveText(/^\d+ / + ACTIVITY_NOUN + /?$/);
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN}s?$`));
   await expect(page.locator('.route-card').first()).toBeVisible();
 
   await waitForServiceWorkerControl(page);
@@ -38,7 +38,7 @@ test('service worker keeps the app shell and route data usable offline', async (
   await context.setOffline(true);
   await page.reload({ waitUntil: 'domcontentloaded' });
 
-  await expect(page.locator('#resultCount')).toHaveText(/^\d+ rides?$/);
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN}s?$`));
   await expect(page.locator('.route-card').first()).toBeVisible();
 
   await context.setOffline(false);

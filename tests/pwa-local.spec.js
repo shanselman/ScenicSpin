@@ -9,13 +9,13 @@ const CACHE_NAME = siteConfig.cacheName;
 
 async function loadCatalog(page) {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('#resultCount')).toHaveText(/^\d+ ${ACTIVITY_NOUN_S}s?$/);
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN_S}s?$`));
   await expect(page.locator('.route-card').first()).toBeVisible();
 }
 
 async function loadCatalogStatus(page) {
   await page.goto('/', { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('#resultCount')).toHaveText(/^\d+ ${ACTIVITY_NOUN_S}s?$/);
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN_S}s?$`));
 }
 
 test.beforeEach(async ({ page }) => {
@@ -36,7 +36,7 @@ test('loads the production JSON route catalog and exposes PWA assets', async ({ 
   expect(routes.length).toBeGreaterThan(10);
 
   await loadCatalogStatus(page);
-  await expect(page.locator('#resultCount')).toHaveText(`${routes.length} rides`);
+  await expect(page.locator('#resultCount')).toHaveText(`${routes.length} ${ACTIVITY_NOUN_S}s`);
   await expect(page.locator('.route-card')).toHaveCount(routes.length);
   await expect(page.locator('.route-card').first()).toContainText(routes[0].title);
 
@@ -233,7 +233,7 @@ test('search and select filters update results and persist preferences', async (
   await loadCatalog(page);
 
   await page.locator('#searchInput').fill('Bavaria');
-  await expect(page.locator('#resultCount')).toHaveText(/ride/);
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(ACTIVITY_NOUN_S));
   await expect(page.locator('.route-card').first()).toContainText(/Bavaria/i);
 
   await page.locator('#durationFilter').selectOption('long');
