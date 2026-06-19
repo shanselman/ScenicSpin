@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "curatedAt": "2026-06-18",
-  "curationPolicy": "Scenic treadmill and walking pad routes — real-world walks, nature trails, city streets. Link/embed official public streams only. Do not download, proxy, mirror, or rehost creator video files. Re-check embed availability and licensing before launch because platform settings can change.",
+  "curationPolicy": "Scenic treadmill and walking pad routes \u2014 real-world walks, nature trails, city streets. Link/embed official public streams only. Do not download, proxy, mirror, or rehost creator video files. Re-check embed availability and licensing before launch because platform settings can change.",
   "routes": [
     {
       "id": "paris-walking-tour-4k-prowalk",
-      "title": "Paris Walking Tour — Pantheon to Eiffel Tower",
+      "title": "Paris Walking Tour \u2014 Pantheon to Eiffel Tower",
       "sourceUrl": "https://www.youtube.com/watch?v=oz1Mgu8e1N4",
       "embedUrl": "https://www.youtube-nocookie.com/embed/oz1Mgu8e1N4",
       "sourcePlatform": "youtube",
@@ -14,17 +14,25 @@
       "durationMinutes": 338,
       "difficulty": "easy",
       "terrain": "paved city streets and boulevards",
-      "sceneryTags": ["city", "historic", "landmarks", "paris", "europe", "architecture"],
+      "sceneryTags": [
+        "city",
+        "historic",
+        "landmarks",
+        "paris",
+        "europe",
+        "architecture"
+      ],
       "videoQuality": "4K",
       "audio": "natural city sounds, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Prowalk Tours; oEmbed resolved on 2026-06-18. Epic 5.5-hour walk covering all major Paris landmarks with captions. Perfect marathon treadmill session."
+      "curationNotes": "Official public YouTube video by Prowalk Tours; oEmbed resolved on 2026-06-18. Epic 5.5-hour walk covering all major Paris landmarks with captions. Perfect marathon treadmill session.",
+      "thumbnail": "https://img.youtube.com/vi/oz1Mgu8e1N4/maxresdefault.jpg"
     },
     {
       "id": "rome-walking-tour-4k-prowalk",
-      "title": "Rome Walking Tour — Spanish Steps to Colosseum",
+      "title": "Rome Walking Tour \u2014 Spanish Steps to Colosseum",
       "sourceUrl": "https://www.youtube.com/watch?v=uOJkVLwnCNI",
       "embedUrl": "https://www.youtube-nocookie.com/embed/uOJkVLwnCNI",
       "sourcePlatform": "youtube",
@@ -33,17 +41,26 @@
       "durationMinutes": 230,
       "difficulty": "easy",
       "terrain": "cobblestone streets and piazzas",
-      "sceneryTags": ["city", "historic", "landmarks", "rome", "europe", "architecture", "ancient"],
+      "sceneryTags": [
+        "city",
+        "historic",
+        "landmarks",
+        "rome",
+        "europe",
+        "architecture",
+        "ancient"
+      ],
       "videoQuality": "4K",
       "audio": "natural city sounds, no commentary",
       "cameraStyle": "first-person POV steady walk with captions",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Prowalk Tours; oEmbed resolved on 2026-06-18. Nearly 4-hour immersive walk through Rome's iconic landmarks."
+      "curationNotes": "Official public YouTube video by Prowalk Tours; oEmbed resolved on 2026-06-18. Nearly 4-hour immersive walk through Rome's iconic landmarks.",
+      "thumbnail": "https://img.youtube.com/vi/uOJkVLwnCNI/maxresdefault.jpg"
     },
     {
       "id": "london-westminster-buckingham-4k",
-      "title": "London Walking Tour — Westminster to Buckingham Palace",
+      "title": "London Walking Tour \u2014 Westminster to Buckingham Palace",
       "sourceUrl": "https://www.youtube.com/watch?v=Sb29Ph8rr1A",
       "embedUrl": "https://www.youtube-nocookie.com/embed/Sb29Ph8rr1A",
       "sourcePlatform": "youtube",
@@ -52,17 +69,26 @@
       "durationMinutes": 62,
       "difficulty": "easy",
       "terrain": "paved streets, parks, royal gardens",
-      "sceneryTags": ["city", "historic", "landmarks", "london", "europe", "parks", "royal"],
+      "sceneryTags": [
+        "city",
+        "historic",
+        "landmarks",
+        "london",
+        "europe",
+        "parks",
+        "royal"
+      ],
       "videoQuality": "4K",
       "audio": "natural city sounds, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Aeolyn Travel; oEmbed resolved on 2026-06-18. Classic London walk past Parliament, Westminster Abbey, St. James's Park, and Buckingham Palace."
+      "curationNotes": "Official public YouTube video by Aeolyn Travel; oEmbed resolved on 2026-06-18. Classic London walk past Parliament, Westminster Abbey, St. James's Park, and Buckingham Palace.",
+      "thumbnail": "https://img.youtube.com/vi/Sb29Ph8rr1A/maxresdefault.jpg"
     },
     {
       "id": "london-ultimate-walking-tour-4k",
-      "title": "Ultimate London Walking Tour — Buckingham to St. Paul's",
+      "title": "Ultimate London Walking Tour \u2014 Buckingham to St. Paul's",
       "sourceUrl": "https://www.youtube.com/watch?v=O5e_p_7RJ80",
       "embedUrl": "https://www.youtube-nocookie.com/embed/O5e_p_7RJ80",
       "sourcePlatform": "youtube",
@@ -71,17 +97,26 @@
       "durationMinutes": 105,
       "difficulty": "easy",
       "terrain": "paved city streets and riverside paths",
-      "sceneryTags": ["city", "historic", "landmarks", "london", "europe", "river", "bridges"],
+      "sceneryTags": [
+        "city",
+        "historic",
+        "landmarks",
+        "london",
+        "europe",
+        "river",
+        "bridges"
+      ],
       "videoQuality": "4K",
       "audio": "natural city sounds, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video; oEmbed resolved on 2026-06-18. Nearly 2-hour comprehensive London walk covering Buckingham Palace, Big Ben, Kensington, Millennium Bridge, and St. Paul's."
+      "curationNotes": "Official public YouTube video; oEmbed resolved on 2026-06-18. Nearly 2-hour comprehensive London walk covering Buckingham Palace, Big Ben, Kensington, Millennium Bridge, and St. Paul's.",
+      "thumbnail": "https://img.youtube.com/vi/O5e_p_7RJ80/maxresdefault.jpg"
     },
     {
       "id": "amsterdam-canals-4k-walking-tour",
-      "title": "Amsterdam Walking Tour — Canals and Historic Streets",
+      "title": "Amsterdam Walking Tour \u2014 Canals and Historic Streets",
       "sourceUrl": "https://www.youtube.com/watch?v=Aswrh_CmLWo",
       "embedUrl": "https://www.youtube-nocookie.com/embed/Aswrh_CmLWo",
       "sourcePlatform": "youtube",
@@ -90,17 +125,26 @@
       "durationMinutes": 66,
       "difficulty": "easy",
       "terrain": "canal-side cobblestone streets",
-      "sceneryTags": ["city", "canals", "historic", "amsterdam", "europe", "bikes", "architecture"],
+      "sceneryTags": [
+        "city",
+        "canals",
+        "historic",
+        "amsterdam",
+        "europe",
+        "bikes",
+        "architecture"
+      ],
       "videoQuality": "4K",
       "audio": "natural city sounds, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Kendin Walks; oEmbed resolved on 2026-06-18. Vibrant hour-long stroll through Amsterdam's famous canals, bridges, and historic neighborhoods."
+      "curationNotes": "Official public YouTube video by Kendin Walks; oEmbed resolved on 2026-06-18. Vibrant hour-long stroll through Amsterdam's famous canals, bridges, and historic neighborhoods.",
+      "thumbnail": "https://img.youtube.com/vi/Aswrh_CmLWo/maxresdefault.jpg"
     },
     {
       "id": "barcelona-4k-hdr-walking-tour",
-      "title": "Barcelona Walking Tour — Gothic Quarter to Sagrada Família",
+      "title": "Barcelona Walking Tour \u2014 Gothic Quarter to Sagrada Fam\u00edlia",
       "sourceUrl": "https://www.youtube.com/watch?v=AdkWedQHnKY",
       "embedUrl": "https://www.youtube-nocookie.com/embed/AdkWedQHnKY",
       "sourcePlatform": "youtube",
@@ -109,17 +153,26 @@
       "durationMinutes": 160,
       "difficulty": "easy",
       "terrain": "paved city streets and plazas",
-      "sceneryTags": ["city", "historic", "architecture", "barcelona", "europe", "gaudi", "mediterranean"],
+      "sceneryTags": [
+        "city",
+        "historic",
+        "architecture",
+        "barcelona",
+        "europe",
+        "gaudi",
+        "mediterranean"
+      ],
       "videoQuality": "4K HDR",
       "audio": "natural city sounds, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Tourister; oEmbed resolved on 2026-06-18. 2 hour 40 minute comprehensive Barcelona walk through La Rambla, El Born, Gothic Quarter, and Barceloneta."
+      "curationNotes": "Official public YouTube video by Tourister; oEmbed resolved on 2026-06-18. 2 hour 40 minute comprehensive Barcelona walk through La Rambla, El Born, Gothic Quarter, and Barceloneta.",
+      "thumbnail": "https://img.youtube.com/vi/AdkWedQHnKY/maxresdefault.jpg"
     },
     {
       "id": "venice-most-beautiful-city-4k",
-      "title": "Walking Through Venice — The Most Beautiful City on Earth",
+      "title": "Walking Through Venice \u2014 The Most Beautiful City on Earth",
       "sourceUrl": "https://www.youtube.com/watch?v=EroPc6wxmXs",
       "embedUrl": "https://www.youtube-nocookie.com/embed/EroPc6wxmXs",
       "sourcePlatform": "youtube",
@@ -128,17 +181,26 @@
       "durationMinutes": 43,
       "difficulty": "easy",
       "terrain": "stone bridges, narrow alleys, waterside paths",
-      "sceneryTags": ["city", "historic", "canals", "venice", "europe", "architecture", "waterfront"],
+      "sceneryTags": [
+        "city",
+        "historic",
+        "canals",
+        "venice",
+        "europe",
+        "architecture",
+        "waterfront"
+      ],
       "videoQuality": "4K UHD",
       "audio": "natural sounds, ambient water and footsteps",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Living The Alps; oEmbed resolved on 2026-06-18. Immersive walk through Venice's canals, bridges, and quiet alleyways with real city sounds."
+      "curationNotes": "Official public YouTube video by Living The Alps; oEmbed resolved on 2026-06-18. Immersive walk through Venice's canals, bridges, and quiet alleyways with real city sounds.",
+      "thumbnail": "https://img.youtube.com/vi/EroPc6wxmXs/maxresdefault.jpg"
     },
     {
       "id": "santorini-greece-4k-walking-tour",
-      "title": "Santorini Walking Tour — Cliffside Villages and Blue Domes",
+      "title": "Santorini Walking Tour \u2014 Cliffside Villages and Blue Domes",
       "sourceUrl": "https://www.youtube.com/watch?v=V8g0dt6DTDw",
       "embedUrl": "https://www.youtube-nocookie.com/embed/V8g0dt6DTDw",
       "sourcePlatform": "youtube",
@@ -147,17 +209,26 @@
       "durationMinutes": 62,
       "difficulty": "moderate",
       "terrain": "volcanic stone paths, steep stairs, cliffside walkways",
-      "sceneryTags": ["island", "coastal", "historic", "santorini", "europe", "mediterranean", "scenic"],
+      "sceneryTags": [
+        "island",
+        "coastal",
+        "historic",
+        "santorini",
+        "europe",
+        "mediterranean",
+        "scenic"
+      ],
       "videoQuality": "4K",
       "audio": "natural sounds, wind and ambient",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by World Walking Tours; oEmbed resolved on 2026-06-18. Hour-long walk through Santorini's iconic white-washed buildings and stunning Aegean Sea views."
+      "curationNotes": "Official public YouTube video by World Walking Tours; oEmbed resolved on 2026-06-18. Hour-long walk through Santorini's iconic white-washed buildings and stunning Aegean Sea views.",
+      "thumbnail": "https://img.youtube.com/vi/V8g0dt6DTDw/maxresdefault.jpg"
     },
     {
       "id": "tokyo-shinjuku-4k-hdr-walk",
-      "title": "Tokyo Shinjuku Walking Tour — Neon Streets and City Life",
+      "title": "Tokyo Shinjuku Walking Tour \u2014 Neon Streets and City Life",
       "sourceUrl": "https://www.youtube.com/watch?v=MBpFfRxDTko",
       "embedUrl": "https://www.youtube-nocookie.com/embed/MBpFfRxDTko",
       "sourcePlatform": "youtube",
@@ -166,17 +237,26 @@
       "durationMinutes": 35,
       "difficulty": "easy",
       "terrain": "paved city streets and pedestrian crossings",
-      "sceneryTags": ["city", "neon", "urban", "tokyo", "japan", "asia", "nightlife"],
+      "sceneryTags": [
+        "city",
+        "neon",
+        "urban",
+        "tokyo",
+        "japan",
+        "asia",
+        "nightlife"
+      ],
       "videoQuality": "4K HDR",
       "audio": "natural city ambience, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Travel at Home; oEmbed resolved on 2026-06-18. Vibrant 4K HDR walk through Shinjuku's bustling streets with relaxing natural city ambience."
+      "curationNotes": "Official public YouTube video by Travel at Home; oEmbed resolved on 2026-06-18. Vibrant 4K HDR walk through Shinjuku's bustling streets with relaxing natural city ambience.",
+      "thumbnail": "https://img.youtube.com/vi/MBpFfRxDTko/maxresdefault.jpg"
     },
     {
       "id": "tokyo-shibuya-4k-hdr-walk",
-      "title": "Tokyo Shibuya Walking Tour — Crossing and Culture",
+      "title": "Tokyo Shibuya Walking Tour \u2014 Crossing and Culture",
       "sourceUrl": "https://www.youtube.com/watch?v=EnCM3VEjrdk",
       "embedUrl": "https://www.youtube-nocookie.com/embed/EnCM3VEjrdk",
       "sourcePlatform": "youtube",
@@ -185,17 +265,26 @@
       "durationMinutes": 43,
       "difficulty": "easy",
       "terrain": "paved city streets and shopping districts",
-      "sceneryTags": ["city", "urban", "tokyo", "japan", "asia", "shopping", "culture"],
+      "sceneryTags": [
+        "city",
+        "urban",
+        "tokyo",
+        "japan",
+        "asia",
+        "shopping",
+        "culture"
+      ],
       "videoQuality": "4K HDR",
       "audio": "natural city ambience, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Travel at Home; oEmbed resolved on 2026-06-18. 43-minute walk through Shibuya including the famous crossing and surrounding districts."
+      "curationNotes": "Official public YouTube video by Travel at Home; oEmbed resolved on 2026-06-18. 43-minute walk through Shibuya including the famous crossing and surrounding districts.",
+      "thumbnail": "https://img.youtube.com/vi/EnCM3VEjrdk/maxresdefault.jpg"
     },
     {
       "id": "tokyo-harajuku-4k-hdr-walk",
-      "title": "Tokyo Harajuku Walking Tour — Fashion and Street Culture",
+      "title": "Tokyo Harajuku Walking Tour \u2014 Fashion and Street Culture",
       "sourceUrl": "https://www.youtube.com/watch?v=AkjGr66Ffng",
       "embedUrl": "https://www.youtube-nocookie.com/embed/AkjGr66Ffng",
       "sourcePlatform": "youtube",
@@ -204,17 +293,26 @@
       "durationMinutes": 36,
       "difficulty": "easy",
       "terrain": "paved city streets and trendy neighborhoods",
-      "sceneryTags": ["city", "urban", "tokyo", "japan", "asia", "fashion", "culture"],
+      "sceneryTags": [
+        "city",
+        "urban",
+        "tokyo",
+        "japan",
+        "asia",
+        "fashion",
+        "culture"
+      ],
       "videoQuality": "4K HDR",
       "audio": "natural city ambience, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Travel at Home; oEmbed resolved on 2026-06-18. 36-minute walk through Harajuku's colorful fashion district with pure ambient sound."
+      "curationNotes": "Official public YouTube video by Travel at Home; oEmbed resolved on 2026-06-18. 36-minute walk through Harajuku's colorful fashion district with pure ambient sound.",
+      "thumbnail": "https://img.youtube.com/vi/AkjGr66Ffng/maxresdefault.jpg"
     },
     {
       "id": "kyoto-arashiyama-bamboo-forest-4k",
-      "title": "Kyoto Walking Tour — Arashiyama Bamboo Forest and Temples",
+      "title": "Kyoto Walking Tour \u2014 Arashiyama Bamboo Forest and Temples",
       "sourceUrl": "https://www.youtube.com/watch?v=JAhydgeLRg0",
       "embedUrl": "https://www.youtube-nocookie.com/embed/JAhydgeLRg0",
       "sourcePlatform": "youtube",
@@ -223,17 +321,27 @@
       "durationMinutes": 39,
       "difficulty": "moderate",
       "terrain": "bamboo forest paths, temple grounds, riverside walks",
-      "sceneryTags": ["nature", "bamboo", "temples", "kyoto", "japan", "asia", "forest", "river"],
+      "sceneryTags": [
+        "nature",
+        "bamboo",
+        "temples",
+        "kyoto",
+        "japan",
+        "asia",
+        "forest",
+        "river"
+      ],
       "videoQuality": "4K",
       "audio": "natural sounds, no commentary",
       "cameraStyle": "first-person POV steady walk at 60fps",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Pure Walking Tours; oEmbed resolved on 2026-06-18. Stunning walk through the iconic bamboo grove and temple roads ending at Togetsukyo Bridge."
+      "curationNotes": "Official public YouTube video by Pure Walking Tours; oEmbed resolved on 2026-06-18. Stunning walk through the iconic bamboo grove and temple roads ending at Togetsukyo Bridge.",
+      "thumbnail": "https://img.youtube.com/vi/JAhydgeLRg0/maxresdefault.jpg"
     },
     {
       "id": "central-park-nyc-4k-nature-walk",
-      "title": "Central Park NYC — Relaxing Nature and City Sounds",
+      "title": "Central Park NYC \u2014 Relaxing Nature and City Sounds",
       "sourceUrl": "https://www.youtube.com/watch?v=2rAlGU1pBmY",
       "embedUrl": "https://www.youtube-nocookie.com/embed/2rAlGU1pBmY",
       "sourcePlatform": "youtube",
@@ -242,17 +350,26 @@
       "durationMinutes": 71,
       "difficulty": "easy",
       "terrain": "paved park paths, bridges, lawns",
-      "sceneryTags": ["park", "nature", "city", "new york", "usa", "trees", "lakes"],
+      "sceneryTags": [
+        "park",
+        "nature",
+        "city",
+        "new york",
+        "usa",
+        "trees",
+        "lakes"
+      ],
       "videoQuality": "4K",
       "audio": "natural park sounds, birdsong, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by City Wander; oEmbed resolved on 2026-06-18. Over an hour of peaceful walking through Central Park's iconic paths and landscapes."
+      "curationNotes": "Official public YouTube video by City Wander; oEmbed resolved on 2026-06-18. Over an hour of peaceful walking through Central Park's iconic paths and landscapes.",
+      "thumbnail": "https://img.youtube.com/vi/2rAlGU1pBmY/maxresdefault.jpg"
     },
     {
       "id": "hawaii-oahu-maui-beach-walk-4k",
-      "title": "Hawaii Beach Walk — Best of Oahu and Maui",
+      "title": "Hawaii Beach Walk \u2014 Best of Oahu and Maui",
       "sourceUrl": "https://www.youtube.com/watch?v=YXjRnctheXA",
       "embedUrl": "https://www.youtube-nocookie.com/embed/YXjRnctheXA",
       "sourcePlatform": "youtube",
@@ -261,17 +378,27 @@
       "durationMinutes": 108,
       "difficulty": "easy",
       "terrain": "sandy beaches and coastal paths",
-      "sceneryTags": ["beach", "ocean", "tropical", "hawaii", "usa", "sand", "coastal", "island"],
+      "sceneryTags": [
+        "beach",
+        "ocean",
+        "tropical",
+        "hawaii",
+        "usa",
+        "sand",
+        "coastal",
+        "island"
+      ],
       "videoQuality": "4K",
       "audio": "ocean waves, natural beach sounds, no commentary",
       "cameraStyle": "first-person POV beach walk at 60fps with captions",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by HP Walking Tours; oEmbed resolved on 2026-06-18. Nearly 2-hour tour of Hawaii's best beaches including Waikiki, Lanikai, Kailua, and Wailea."
+      "curationNotes": "Official public YouTube video by HP Walking Tours; oEmbed resolved on 2026-06-18. Nearly 2-hour tour of Hawaii's best beaches including Waikiki, Lanikai, Kailua, and Wailea.",
+      "thumbnail": "https://img.youtube.com/vi/YXjRnctheXA/maxresdefault.jpg"
     },
     {
       "id": "brazil-garopaba-beach-walk-4k",
-      "title": "Relaxing Walk on Garopaba Beach — Santa Catarina, Brazil",
+      "title": "Relaxing Walk on Garopaba Beach \u2014 Santa Catarina, Brazil",
       "sourceUrl": "https://www.youtube.com/watch?v=JwaA2HbwlDk",
       "embedUrl": "https://www.youtube-nocookie.com/embed/JwaA2HbwlDk",
       "sourcePlatform": "youtube",
@@ -280,55 +407,84 @@
       "durationMinutes": 27,
       "difficulty": "easy",
       "terrain": "sandy beach, gentle surf",
-      "sceneryTags": ["beach", "ocean", "tropical", "brazil", "south america", "sand", "coastal"],
+      "sceneryTags": [
+        "beach",
+        "ocean",
+        "tropical",
+        "brazil",
+        "south america",
+        "sand",
+        "coastal"
+      ],
       "videoQuality": "4K",
       "audio": "ocean waves, ambient beach sounds, no commentary",
       "cameraStyle": "first-person POV beach walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Brazilian Diaries; oEmbed resolved on 2026-06-18. Serene beach walk with natural soundscape of waves and gentle wind."
+      "curationNotes": "Official public YouTube video by Brazilian Diaries; oEmbed resolved on 2026-06-18. Serene beach walk with natural soundscape of waves and gentle wind.",
+      "thumbnail": "https://img.youtube.com/vi/JwaA2HbwlDk/maxresdefault.jpg"
     },
     {
       "id": "brazil-most-beautiful-beaches-4k",
-      "title": "Brazil's Most Beautiful Beaches — 4 Hours of Summer Vibes",
+      "title": "Brazil's Most Beautiful Beaches \u2014 4 Hours of Summer Vibes",
       "sourceUrl": "https://www.youtube.com/watch?v=8xyqons_4_c",
       "embedUrl": "https://www.youtube-nocookie.com/embed/8xyqons_4_c",
       "sourcePlatform": "youtube",
       "creator": "Nomad Vision 4K",
-      "location": "São Paulo Coast, Brazil",
+      "location": "S\u00e3o Paulo Coast, Brazil",
       "durationMinutes": 244,
       "difficulty": "easy",
       "terrain": "sandy beaches and coastal trails",
-      "sceneryTags": ["beach", "ocean", "tropical", "brazil", "south america", "sand", "coastal", "summer"],
+      "sceneryTags": [
+        "beach",
+        "ocean",
+        "tropical",
+        "brazil",
+        "south america",
+        "sand",
+        "coastal",
+        "summer"
+      ],
       "videoQuality": "4K UHD",
       "audio": "ocean waves, nature sounds, no talking",
       "cameraStyle": "first-person POV beach walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Nomad Vision 4K; oEmbed resolved on 2026-06-18. 4-hour compilation walking Brazil's most beautiful beaches including Praia Grande and Maranduba."
+      "curationNotes": "Official public YouTube video by Nomad Vision 4K; oEmbed resolved on 2026-06-18. 4-hour compilation walking Brazil's most beautiful beaches including Praia Grande and Maranduba.",
+      "thumbnail": "https://img.youtube.com/vi/8xyqons_4_c/maxresdefault.jpg"
     },
     {
       "id": "brazil-ubatuba-beach-walk-4k",
-      "title": "Ubatuba Beach Walk — Relaxing Blue Ocean and Summer Vibes",
+      "title": "Ubatuba Beach Walk \u2014 Relaxing Blue Ocean and Summer Vibes",
       "sourceUrl": "https://www.youtube.com/watch?v=az9ddzaB7RQ",
       "embedUrl": "https://www.youtube-nocookie.com/embed/az9ddzaB7RQ",
       "sourcePlatform": "youtube",
       "creator": "Nomad Vision 4K",
-      "location": "Ubatuba, São Paulo, Brazil",
+      "location": "Ubatuba, S\u00e3o Paulo, Brazil",
       "durationMinutes": 251,
       "difficulty": "easy",
       "terrain": "sandy beaches, crystal blue water",
-      "sceneryTags": ["beach", "ocean", "tropical", "brazil", "south america", "sand", "coastal", "summer"],
+      "sceneryTags": [
+        "beach",
+        "ocean",
+        "tropical",
+        "brazil",
+        "south america",
+        "sand",
+        "coastal",
+        "summer"
+      ],
       "videoQuality": "4K UHD",
       "audio": "ocean waves, nature sounds, no commentary",
       "cameraStyle": "first-person POV beach walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Nomad Vision 4K; oEmbed resolved on 2026-06-18. Over 4 hours of continuous beach walking through several iconic Ubatuba beaches."
+      "curationNotes": "Official public YouTube video by Nomad Vision 4K; oEmbed resolved on 2026-06-18. Over 4 hours of continuous beach walking through several iconic Ubatuba beaches.",
+      "thumbnail": "https://img.youtube.com/vi/az9ddzaB7RQ/maxresdefault.jpg"
     },
     {
       "id": "sorrento-amalfi-coast-4k-walk",
-      "title": "Sorrento Walking Tour — Amalfi Coast Paradise Beach and Town",
+      "title": "Sorrento Walking Tour \u2014 Amalfi Coast Paradise Beach and Town",
       "sourceUrl": "https://www.youtube.com/watch?v=3Yujeo646G8",
       "embedUrl": "https://www.youtube-nocookie.com/embed/3Yujeo646G8",
       "sourcePlatform": "youtube",
@@ -337,17 +493,26 @@
       "durationMinutes": 55,
       "difficulty": "moderate",
       "terrain": "coastal paths, town streets, beach promenade",
-      "sceneryTags": ["coastal", "beach", "town", "italy", "europe", "mediterranean", "amalfi"],
+      "sceneryTags": [
+        "coastal",
+        "beach",
+        "town",
+        "italy",
+        "europe",
+        "mediterranean",
+        "amalfi"
+      ],
       "videoQuality": "4K",
       "audio": "natural sounds, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by PixelPulse Travels; oEmbed resolved on 2026-06-18. 55-minute walk through Sorrento's Paradise Beach and Corso Italia with Amalfi Coast views."
+      "curationNotes": "Official public YouTube video by PixelPulse Travels; oEmbed resolved on 2026-06-18. 55-minute walk through Sorrento's Paradise Beach and Corso Italia with Amalfi Coast views.",
+      "thumbnail": "https://img.youtube.com/vi/3Yujeo646G8/maxresdefault.jpg"
     },
     {
       "id": "amalfi-coastal-path-4k-walk",
-      "title": "Amalfi Coastal Path — Midday Walk with City Sounds",
+      "title": "Amalfi Coastal Path \u2014 Midday Walk with City Sounds",
       "sourceUrl": "https://www.youtube.com/watch?v=StCWIwbMhRA",
       "embedUrl": "https://www.youtube-nocookie.com/embed/StCWIwbMhRA",
       "sourcePlatform": "youtube",
@@ -356,17 +521,26 @@
       "durationMinutes": 26,
       "difficulty": "moderate",
       "terrain": "coastal stone paths, town streets, stairs",
-      "sceneryTags": ["coastal", "town", "italy", "europe", "mediterranean", "amalfi", "cliffside"],
+      "sceneryTags": [
+        "coastal",
+        "town",
+        "italy",
+        "europe",
+        "mediterranean",
+        "amalfi",
+        "cliffside"
+      ],
       "videoQuality": "4K",
       "audio": "real city sounds, no commentary",
       "cameraStyle": "first-person POV steady walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by World Walks 4K; oEmbed resolved on 2026-06-18. Compact 26-minute walk along Amalfi's charming coastal path with authentic Italian ambience."
+      "curationNotes": "Official public YouTube video by World Walks 4K; oEmbed resolved on 2026-06-18. Compact 26-minute walk along Amalfi's charming coastal path with authentic Italian ambience.",
+      "thumbnail": "https://img.youtube.com/vi/StCWIwbMhRA/maxresdefault.jpg"
     },
     {
       "id": "yosemite-national-park-4k-walk",
-      "title": "Yosemite National Park Walking Tour — Valley and Waterfalls",
+      "title": "Yosemite National Park Walking Tour \u2014 Valley and Waterfalls",
       "sourceUrl": "https://www.youtube.com/watch?v=FPwnoYDTdUw",
       "embedUrl": "https://www.youtube-nocookie.com/embed/FPwnoYDTdUw",
       "sourcePlatform": "youtube",
@@ -375,17 +549,26 @@
       "durationMinutes": 26,
       "difficulty": "moderate",
       "terrain": "park trails and scenic viewpoints",
-      "sceneryTags": ["nature", "national park", "mountains", "waterfalls", "forest", "california", "usa"],
+      "sceneryTags": [
+        "nature",
+        "national park",
+        "mountains",
+        "waterfalls",
+        "forest",
+        "california",
+        "usa"
+      ],
       "videoQuality": "4K",
       "audio": "natural sounds, no commentary",
       "cameraStyle": "first-person POV walking tour",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by Traveling with Andrew; oEmbed resolved on 2026-06-18. Covers Valley View, Tunnel View, Bridalveil Fall, and El Capitan in stunning 4K."
+      "curationNotes": "Official public YouTube video by Traveling with Andrew; oEmbed resolved on 2026-06-18. Covers Valley View, Tunnel View, Bridalveil Fall, and El Capitan in stunning 4K.",
+      "thumbnail": "https://img.youtube.com/vi/FPwnoYDTdUw/maxresdefault.jpg"
     },
     {
       "id": "banff-national-park-7hr-nature-4k",
-      "title": "Banff National Park — 7-Hour Scenic Nature Walk",
+      "title": "Banff National Park \u2014 7-Hour Scenic Nature Walk",
       "sourceUrl": "https://www.youtube.com/watch?v=g9wtaWmSBic",
       "embedUrl": "https://www.youtube-nocookie.com/embed/g9wtaWmSBic",
       "sourcePlatform": "youtube",
@@ -394,17 +577,27 @@
       "durationMinutes": 447,
       "difficulty": "moderate",
       "terrain": "mountain trails, lakeside paths, forest walks",
-      "sceneryTags": ["nature", "national park", "mountains", "lakes", "forest", "canada", "rocky mountains", "waterfalls"],
+      "sceneryTags": [
+        "nature",
+        "national park",
+        "mountains",
+        "lakes",
+        "forest",
+        "canada",
+        "rocky mountains",
+        "waterfalls"
+      ],
       "videoQuality": "4K UHD",
       "audio": "natural sounds, ambient nature",
       "cameraStyle": "first-person POV nature walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by 4K Relaxation Channel; oEmbed resolved on 2026-06-18. Epic 7+ hour walk through Banff featuring lakes, forests, waterfalls, and Rocky Mountain scenery."
+      "curationNotes": "Official public YouTube video by 4K Relaxation Channel; oEmbed resolved on 2026-06-18. Epic 7+ hour walk through Banff featuring lakes, forests, waterfalls, and Rocky Mountain scenery.",
+      "thumbnail": "https://img.youtube.com/vi/g9wtaWmSBic/maxresdefault.jpg"
     },
     {
       "id": "pacific-nw-forest-walk-4k",
-      "title": "Peaceful Summer Forest Walk — Pacific Northwest",
+      "title": "Peaceful Summer Forest Walk \u2014 Pacific Northwest",
       "sourceUrl": "https://www.youtube.com/watch?v=aq0LWnMU2Lo",
       "embedUrl": "https://www.youtube-nocookie.com/embed/aq0LWnMU2Lo",
       "sourcePlatform": "youtube",
@@ -413,17 +606,26 @@
       "durationMinutes": 132,
       "difficulty": "easy",
       "terrain": "forest trails, packed earth paths",
-      "sceneryTags": ["nature", "forest", "pacific northwest", "usa", "trees", "summer", "trail"],
+      "sceneryTags": [
+        "nature",
+        "forest",
+        "pacific northwest",
+        "usa",
+        "trees",
+        "summer",
+        "trail"
+      ],
       "videoQuality": "4K HDR",
       "audio": "real footstep sounds, birdsong, no commentary",
       "cameraStyle": "first-person POV nature walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by 4K Relaxation Channel; oEmbed resolved on 2026-06-18. Over 2 hours of peaceful forest walking with real nature sounds and footsteps."
+      "curationNotes": "Official public YouTube video by 4K Relaxation Channel; oEmbed resolved on 2026-06-18. Over 2 hours of peaceful forest walking with real nature sounds and footsteps.",
+      "thumbnail": "https://img.youtube.com/vi/aq0LWnMU2Lo/maxresdefault.jpg"
     },
     {
       "id": "oregon-rainforest-walk-4k",
-      "title": "Oregon Rainforest Walk — Pure Nature, No Music",
+      "title": "Oregon Rainforest Walk \u2014 Pure Nature, No Music",
       "sourceUrl": "https://www.youtube.com/watch?v=S-spmZjXxX4",
       "embedUrl": "https://www.youtube-nocookie.com/embed/S-spmZjXxX4",
       "sourcePlatform": "youtube",
@@ -432,17 +634,27 @@
       "durationMinutes": 114,
       "difficulty": "moderate",
       "terrain": "rainforest trail, river crossings, mossy paths",
-      "sceneryTags": ["nature", "rainforest", "forest", "oregon", "usa", "river", "trail", "moss"],
+      "sceneryTags": [
+        "nature",
+        "rainforest",
+        "forest",
+        "oregon",
+        "usa",
+        "river",
+        "trail",
+        "moss"
+      ],
       "videoQuality": "4K",
       "audio": "natural forest sounds, river, no talk, no music",
       "cameraStyle": "first-person POV nature walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by ExciteHike; oEmbed resolved on 2026-06-18. Nearly 2-hour immersive rainforest walk with pure nature sounds — no talk, no music."
+      "curationNotes": "Official public YouTube video by ExciteHike; oEmbed resolved on 2026-06-18. Nearly 2-hour immersive rainforest walk with pure nature sounds \u2014 no talk, no music.",
+      "thumbnail": "https://img.youtube.com/vi/S-spmZjXxX4/maxresdefault.jpg"
     },
     {
       "id": "rainforest-black-hole-falls-4k",
-      "title": "Rainforest Walk to Black Hole Falls — Washington",
+      "title": "Rainforest Walk to Black Hole Falls \u2014 Washington",
       "sourceUrl": "https://www.youtube.com/watch?v=BaingE6BZ10",
       "embedUrl": "https://www.youtube-nocookie.com/embed/BaingE6BZ10",
       "sourcePlatform": "youtube",
@@ -451,13 +663,23 @@
       "durationMinutes": 197,
       "difficulty": "moderate",
       "terrain": "rainforest trail, waterfall paths, river crossings",
-      "sceneryTags": ["nature", "rainforest", "forest", "washington", "usa", "waterfall", "trail", "river"],
+      "sceneryTags": [
+        "nature",
+        "rainforest",
+        "forest",
+        "washington",
+        "usa",
+        "waterfall",
+        "trail",
+        "river"
+      ],
       "videoQuality": "4K",
       "audio": "natural forest sounds, waterfall, no talk, no music",
       "cameraStyle": "first-person POV nature walk",
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
-      "curationNotes": "Official public YouTube video by ExciteHike; oEmbed resolved on 2026-06-18. Over 3 hours of rainforest trail walking ending at scenic Black Hole Falls. Pure nature immersion."
+      "curationNotes": "Official public YouTube video by ExciteHike; oEmbed resolved on 2026-06-18. Over 3 hours of rainforest trail walking ending at scenic Black Hole Falls. Pure nature immersion.",
+      "thumbnail": "https://img.youtube.com/vi/BaingE6BZ10/maxresdefault.jpg"
     }
   ]
 }
