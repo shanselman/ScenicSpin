@@ -40,5 +40,45 @@
   "sisterSiteUrl": "https://pedalscape.com",
   "sisterSiteEmoji": "🚴",
   "sisterSiteActivity": "cycling",
-  "activityDevice": "treadmill"
+  "activityDevice": "treadmill",
+  "localeOverrides": {
+    "es": {
+      "activity_noun_singular": "caminata",
+      "activity_noun_plural": "caminatas",
+      "activity_noun_singular_cap": "Caminata",
+      "activity_noun_plural_cap": "Caminatas",
+      "activity_verb": "caminar",
+      "activity_verb_cap": "Caminar",
+      "activity_device": "caminadora",
+      "site_tagline": "Cualquier {{activity_device}}. Cualquier pantalla. Hermosas {{activity_noun_plural}} desde casa."
+    },
+    "fr": {
+      "activity_noun_singular": "marche",
+      "activity_noun_plural": "marches",
+      "activity_noun_singular_cap": "Marche",
+      "activity_noun_plural_cap": "Marches",
+      "activity_verb": "marche",
+      "activity_verb_cap": "Marche",
+      "activity_device": "tapis de course"
+    },
+    "it": {
+      "activity_noun_singular": "passeggiata",
+      "activity_noun_plural": "passeggiate",
+      "activity_noun_singular_cap": "Passeggiata",
+      "activity_noun_plural_cap": "Passeggiate",
+      "activity_verb": "camminare",
+      "activity_verb_cap": "Camminare",
+      "activity_device": "tapis roulant",
+      "site_tagline": "Qualsiasi {{activity_device}}. Qualsiasi schermo. Bellissime {{activity_noun_plural}} da casa."
+    },
+    "tr": {
+      "activity_noun_singular": "y\u00fcr\u00fcy\u00fc\u015f",
+      "activity_noun_plural": "y\u00fcr\u00fcy\u00fc\u015fler",
+      "activity_noun_singular_cap": "Y\u00fcr\u00fcy\u00fc\u015f",
+      "activity_noun_plural_cap": "Y\u00fcr\u00fcy\u00fc\u015fler",
+      "activity_verb": "y\u00fcr\u00fcme",
+      "activity_verb_cap": "Y\u00fcr\u00fcme",
+      "activity_device": "ko\u015fu band\u0131"
+    }
+  }
 }

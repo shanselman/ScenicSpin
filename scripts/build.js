@@ -128,7 +128,16 @@ const localesDir = 'locales';
 if (fs.existsSync(localesDir)) {
   const localeOutDir = path.join(outDir, 'locales');
   fs.mkdirSync(localeOutDir, { recursive: true });
-  const siteI18nKeys = {
+  // Keys that are always overwritten (brand names, URLs — never translated)
+  const alwaysOverwrite = {
+    site_name: config.siteName,
+    sister_site_name: config.sisterSiteName,
+    sister_site_url: config.sisterSiteUrl,
+    sister_site_activity: config.sisterSiteActivity,
+    sister_site_emoji: config.sisterSiteEmoji,
+  };
+  // Keys injected as fallback only — translator values take precedence
+  const fallbackKeys = {
     activity_noun_singular: config.activityNounSingular,
     activity_noun_plural: config.activityNoun,
     activity_noun_singular_cap: config.activityNounSingularCap,
@@ -136,16 +145,25 @@ if (fs.existsSync(localesDir)) {
     activity_verb: config.activityVerb,
     activity_verb_cap: config.activityVerbCap,
     activity_device: config.activityDevice,
-    site_name: config.siteName,
-    sister_site_name: config.sisterSiteName,
-    sister_site_url: config.sisterSiteUrl,
-    sister_site_activity: config.sisterSiteActivity,
-    sister_site_emoji: config.sisterSiteEmoji,
   };
   for (const file of fs.readdirSync(localesDir)) {
     if (!file.endsWith('.json')) continue;
+    const isEnglish = file === 'en.json';
     const locale = JSON.parse(fs.readFileSync(path.join(localesDir, file), 'utf8'));
-    Object.assign(locale, siteI18nKeys);
+    // Always overwrite brand/URL keys
+    Object.assign(locale, alwaysOverwrite);
+    // For English, always inject site activity keys (source of truth)
+    // For translated locales, only fill in keys the translator left as English stubs
+    for (const [k, v] of Object.entries(fallbackKeys)) {
+      if (isEnglish || locale[k] === fallbackKeys[k] || !locale[k]) {
+        locale[k] = v;
+      }
+    }
+    // Apply site-specific locale overrides (e.g. beltscape walking words per language)
+    const langCode = file.replace('.json', '');
+    if (!isEnglish && config.localeOverrides && config.localeOverrides[langCode]) {
+      Object.assign(locale, config.localeOverrides[langCode]);
+    }
     fs.writeFileSync(path.join(localeOutDir, file), JSON.stringify(locale, null, 2) + '\n');
   }
   console.log(`  ✓ locales/ (site-specific i18n keys injected)`);

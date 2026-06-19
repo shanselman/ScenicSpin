@@ -7,6 +7,7 @@
   "activity_verb_cap": "Bisiklet Sürme",
   "activity_device": "bisiklet",
   "site_name": "ScenicSpin",
+  "site_tagline": "Her {{activity_device}}. Her ekran. Evden güzel {{activity_noun_plural}}.",
   "sister_site_name": "",
   "sister_site_url": "",
   "sister_site_activity": "",

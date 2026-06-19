@@ -7,6 +7,7 @@
   "activity_verb_cap": "Cyclisme",
   "activity_device": "vélo",
   "site_name": "ScenicSpin",
+  "site_tagline": "N'importe quel {{activity_device}}. N'importe quel écran. De belles {{activity_noun_plural}} depuis chez vous.",
   "sister_site_name": "",
   "sister_site_url": "",
   "sister_site_activity": "",
