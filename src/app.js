@@ -62,6 +62,8 @@ function t(key, vars = {}) {
   for (const [k, v] of Object.entries(vars)) {
     str = str.replaceAll(`{{${k}}}`, v);
   }
+  // Auto-resolve remaining {{key}} references from the i18n dictionary (one level)
+  str = str.replace(/\{\{(\w+)\}\}/g, (match, ref) => i18n[ref] ?? match);
   return str;
 }
 
@@ -708,7 +710,7 @@ function normalizeRoute(route) {
   const videoId = youtubeRoute ? extractYouTubeId(route) : null;
   const thumbnailUrl = route.thumbnailUrl || route.imageUrl || getYouTubeThumbnail(videoId, 'hqdefault');
   const thumbnailFallbackUrl = youtubeRoute && videoId ? getYouTubeThumbnail(videoId, 'mqdefault') : '';
-  const title = cleanPublicText(route.title, 'Untitled {{ACTIVITY_NOUN_SINGULAR}}');
+  const title = cleanPublicText(route.title, `Untitled ${t('activity_noun_singular')}`);
   const location = cleanPublicText(route.location, 'Location to be announced');
   const terrain = cleanPublicText(route.terrain, 'Scenic cycling route');
   const creator = cleanPublicText(route.creator, 'Public video source');
@@ -965,7 +967,7 @@ function setHeroImage(route) {
   const fallback = elements.heroImageFallback;
   image.hidden = !route.thumbnailUrl;
   fallback.hidden = Boolean(route.thumbnailUrl);
-  fallback.textContent = route.scenery || '{{ACTIVITY_NOUN_SINGULAR_CAP}}';
+  fallback.textContent = route.scenery || t('activity_noun_singular_cap');
 
   if (!route.thumbnailUrl) {
     image.removeAttribute('src');
@@ -991,7 +993,7 @@ function renderHeroRoute() {
     elements.heroRouteButton.removeAttribute('aria-label');
     elements.heroImage.hidden = true;
     elements.heroImageFallback.hidden = false;
-    elements.heroImageFallback.textContent = '{{ACTIVITY_NOUN_SINGULAR_CAP}}';
+    elements.heroImageFallback.textContent = t('activity_noun_singular_cap');
     return;
   }
 

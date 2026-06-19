@@ -123,17 +123,32 @@ console.log(`  ✓ assets/`);
 // Copy routes — catalog + candidate-backlog
 fs.mkdirSync(path.join(outDir, 'routes'), { recursive: true });
 
-// Copy and process locales (token replacement applied)
+// Copy and process locales (inject site-specific i18n keys)
 const localesDir = 'locales';
 if (fs.existsSync(localesDir)) {
   const localeOutDir = path.join(outDir, 'locales');
   fs.mkdirSync(localeOutDir, { recursive: true });
+  const siteI18nKeys = {
+    activity_noun_singular: config.activityNounSingular,
+    activity_noun_plural: config.activityNoun,
+    activity_noun_singular_cap: config.activityNounSingularCap,
+    activity_noun_plural_cap: config.activityNounCap,
+    activity_verb: config.activityVerb,
+    activity_verb_cap: config.activityVerbCap,
+    activity_device: config.activityDevice,
+    site_name: config.siteName,
+    sister_site_name: config.sisterSiteName,
+    sister_site_url: config.sisterSiteUrl,
+    sister_site_activity: config.sisterSiteActivity,
+    sister_site_emoji: config.sisterSiteEmoji,
+  };
   for (const file of fs.readdirSync(localesDir)) {
     if (!file.endsWith('.json')) continue;
-    const processed = replaceTokens(fs.readFileSync(path.join(localesDir, file), 'utf8'));
-    fs.writeFileSync(path.join(localeOutDir, file), processed);
+    const locale = JSON.parse(fs.readFileSync(path.join(localesDir, file), 'utf8'));
+    Object.assign(locale, siteI18nKeys);
+    fs.writeFileSync(path.join(localeOutDir, file), JSON.stringify(locale, null, 2) + '\n');
   }
-  console.log(`  ✓ locales/ (token-replaced)`);
+  console.log(`  ✓ locales/ (site-specific i18n keys injected)`);
 }
 
 const catalogSrc = path.join('routes', config.catalogFile);
