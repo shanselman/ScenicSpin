@@ -16,6 +16,8 @@ const shellAssets = [
   './locales/fr.json',
   './locales/it.json',
   './locales/tr.json',
+  './locales/zh-TW.json',
+  './locales/zh-CN.json',
   './icons/favicon.svg',
   './icons/app-icon.svg',
   './icons/icon-192.png',

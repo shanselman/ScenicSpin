@@ -18,8 +18,8 @@
   "panelColor": "#0d1929",
   "panelStrong": "#14283d",
   "themeColor": "#060d18",
-  "shellVersion": "4",
-  "cacheName": "beltscape-shell-v4",
+  "shellVersion": "6",
+  "cacheName": "beltscape-shell-v6",
   "catalogFile": "beltscape-catalog.json",
   "activityNoun": "walks",
   "activityNounCap": "Walks",
@@ -83,6 +83,28 @@
       "activity_verb_cap": "Y\u00fcr\u00fcme",
       "activity_device": "ko\u015fu band\u0131",
       "sister_site_activity": "bisiklet s\u00fcrme"
+    },
+    "zh-TW": {
+      "activity_noun_singular": "步行",
+      "activity_noun_plural": "步行",
+      "activity_noun_singular_cap": "步行",
+      "activity_noun_plural_cap": "步行",
+      "activity_verb": "步行",
+      "activity_verb_cap": "步行",
+      "activity_device": "跑步機",
+      "sister_site_activity": "騎乘",
+      "site_tagline": "任何{{activity_device}}。任何螢幕。在家享受美麗的{{activity_noun_plural}}路線。"
+    },
+    "zh-CN": {
+      "activity_noun_singular": "步行",
+      "activity_noun_plural": "步行",
+      "activity_noun_singular_cap": "步行",
+      "activity_noun_plural_cap": "步行",
+      "activity_verb": "步行",
+      "activity_verb_cap": "步行",
+      "activity_device": "跑步机",
+      "sister_site_activity": "骑行",
+      "site_tagline": "任何{{activity_device}}。任何屏幕。在家享受精美的{{activity_noun_plural}}路线。"
     }
   }
 }

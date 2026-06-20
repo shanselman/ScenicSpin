@@ -10,7 +10,7 @@
   <img alt="No backend" src="https://img.shields.io/badge/Backend-none-555">
   <img alt="Local first" src="https://img.shields.io/badge/Storage-localStorage-2d7fc1">
   <img alt="Build" src="https://img.shields.io/badge/Build-Node.js%20(zero%20deps)-339933?logo=node.js&logoColor=white">
-  <img alt="i18n" src="https://img.shields.io/badge/i18n-5%20languages-38e8a4?labelColor=062017">
+  <img alt="i18n" src="https://img.shields.io/badge/i18n-7%20languages-38e8a4?labelColor=062017">
   <img alt="Tests" src="https://img.shields.io/badge/Tested%20with-Playwright-2EAD33?logo=playwright&logoColor=white">
   <img alt="Deploy" src="https://img.shields.io/badge/Deploy-GitHub%20Pages-222?logo=githubpages&logoColor=white">
   <img alt="License" src="https://img.shields.io/badge/License-MIT-blue">
@@ -43,7 +43,7 @@ ScenicSpin ships as two independent, white‑labeled sites built from the same t
 - **Favorites & history** — Star routes and resume recent activity. Stored in `localStorage` on your device only.
 - **Installable PWA** — Add to your home screen; the app shell works offline thanks to a service worker.
 - **Privacy‑friendly embeds** — Videos use `youtube-nocookie.com` and link/embed official public streams only (never downloaded or rehosted).
-- **5 languages** — English, Spanish, French, Italian, and Turkish, with runtime `{{token}}` substitution.
+- **7 languages** — English, Spanish, French, Italian, Turkish, Traditional Chinese, and Simplified Chinese, with runtime `{{token}}` substitution.
 - **Filter & search** — Browse routes by scenery, terrain, difficulty, and duration.
 
 ---
@@ -85,6 +85,7 @@ ScenicSpin/
 │   ├── en.json                #   English (source of truth)
 │   ├── es.json  fr.json
 │   ├── it.json  tr.json
+│   ├── zh-TW.json  zh-CN.json
 ├── sites/                     # Per-site configuration
 │   ├── pedalscape.config.json
 │   └── beltscape.config.json
@@ -207,9 +208,9 @@ Each locale file in [`locales/`](locales/) holds ~164 keys. `en.json` is the **s
 
 1. **Always‑overwrite keys** — brand/URL keys (`site_name`, `sister_site_name`, `sister_site_url`, …) are forced from the site config so they're never accidentally translated.
 2. **Fallback activity keys** — `activity_noun_singular`, `activity_verb`, `activity_device`, etc. are injected **only as fallbacks**. A translator‑provided value always wins; English stubs get replaced with the site's word (e.g. `ride` → `walk`).
-3. **Per‑language overrides** — `beltscape.config.json` carries a `localeOverrides` block with proper walking vocabulary for each language (Spanish *caminata*, French *marche*, Italian *passeggiata*, Turkish *yürüyüş*…), applied last.
+3. **Per‑language overrides** — `beltscape.config.json` carries a `localeOverrides` block with proper walking vocabulary for each language (Spanish *caminata*, French *marche*, Italian *passeggiata*, Turkish *yürüyüş*, Chinese walking terms…), applied last.
 
-This is why one set of locale files produces both "ride / cycling / bike" and "walk / walking / treadmill" copy across five languages.
+This is why one set of locale files produces both "ride / cycling / bike" and "walk / walking / treadmill" copy across seven languages.
 
 ### Adding a new language
 
@@ -316,6 +317,7 @@ Please keep the projects local‑first and privacy‑friendly: no analytics, no 
 - **Author & maintainer:** Scott Hanselman ([@shanselman](https://github.com/shanselman))
 - **Translations:** Serdar Cevher (🇪🇸 Spanish, 🇫🇷 French, 🇮🇹 Italian, 🇹🇷 Turkish)
   - 🇪🇸 Spanish · 🇫🇷 French · 🇮🇹 Italian — community contributors
+  - 🇹🇼 Traditional Chinese · 🇨🇳 Simplified Chinese — pending validation
 - **Scenic routes:** the original YouTube creators, whose public streams are embedded with attribution. Please support them directly.
 
 ---
