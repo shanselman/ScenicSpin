@@ -18,8 +18,8 @@
   "panelColor": "#0d1929",
   "panelStrong": "#14283d",
   "themeColor": "#060d18",
-  "shellVersion": "3",
-  "cacheName": "beltscape-shell-v3",
+  "shellVersion": "4",
+  "cacheName": "beltscape-shell-v4",
   "catalogFile": "beltscape-catalog.json",
   "activityNoun": "walks",
   "activityNounCap": "Walks",
@@ -50,6 +50,7 @@
       "activity_verb": "caminar",
       "activity_verb_cap": "Caminar",
       "activity_device": "caminadora",
+      "sister_site_activity": "pedalear",
       "site_tagline": "Cualquier {{activity_device}}. Cualquier pantalla. Hermosas {{activity_noun_plural}} desde casa."
     },
     "fr": {
@@ -59,7 +60,8 @@
       "activity_noun_plural_cap": "Marches",
       "activity_verb": "marche",
       "activity_verb_cap": "Marche",
-      "activity_device": "tapis de course"
+      "activity_device": "tapis de course",
+      "sister_site_activity": "le cyclisme"
     },
     "it": {
       "activity_noun_singular": "passeggiata",
@@ -69,6 +71,7 @@
       "activity_verb": "camminare",
       "activity_verb_cap": "Camminare",
       "activity_device": "tapis roulant",
+      "sister_site_activity": "pedalare",
       "site_tagline": "Qualsiasi {{activity_device}}. Qualsiasi schermo. Bellissime {{activity_noun_plural}} da casa."
     },
     "tr": {
@@ -78,7 +81,8 @@
       "activity_noun_plural_cap": "Y\u00fcr\u00fcy\u00fc\u015fler",
       "activity_verb": "y\u00fcr\u00fcme",
       "activity_verb_cap": "Y\u00fcr\u00fcme",
-      "activity_device": "ko\u015fu band\u0131"
+      "activity_device": "ko\u015fu band\u0131",
+      "sister_site_activity": "bisiklet s\u00fcrme"
     }
   }
 }

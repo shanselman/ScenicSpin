@@ -133,7 +133,6 @@ if (fs.existsSync(localesDir)) {
     site_name: config.siteName,
     sister_site_name: config.sisterSiteName,
     sister_site_url: config.sisterSiteUrl,
-    sister_site_activity: config.sisterSiteActivity,
     sister_site_emoji: config.sisterSiteEmoji,
   };
   // Keys injected as fallback only — translator values take precedence
@@ -145,6 +144,7 @@ if (fs.existsSync(localesDir)) {
     activity_verb: config.activityVerb,
     activity_verb_cap: config.activityVerbCap,
     activity_device: config.activityDevice,
+    sister_site_activity: config.sisterSiteActivity,
   };
   for (const file of fs.readdirSync(localesDir)) {
     if (!file.endsWith('.json')) continue;

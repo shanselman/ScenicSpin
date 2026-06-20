@@ -18,8 +18,8 @@
   "panelColor": "#0d2229",
   "panelStrong": "#14333d",
   "themeColor": "#061318",
-  "shellVersion": "7",
-  "cacheName": "pedalscape-shell-v7",
+  "shellVersion": "8",
+  "cacheName": "pedalscape-shell-v8",
   "catalogFile": "catalog.json",
   "activityNoun": "rides",
   "activityNounCap": "Rides",
@@ -40,5 +40,19 @@
   "sisterSiteUrl": "https://beltscape.com",
   "sisterSiteEmoji": "🚶",
   "sisterSiteActivity": "walking",
-  "activityDevice": "bike"
+  "activityDevice": "bike",
+  "localeOverrides": {
+    "es": {
+      "sister_site_activity": "caminar"
+    },
+    "fr": {
+      "sister_site_activity": "la marche"
+    },
+    "it": {
+      "sister_site_activity": "camminare"
+    },
+    "tr": {
+      "sister_site_activity": "y\u00fcr\u00fcme"
+    }
+  }
 }
