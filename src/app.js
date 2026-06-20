@@ -40,12 +40,36 @@ const candidateDecisionLabels = {
 
 let i18n = {};
 
+const supportedLocales = ['en', 'es', 'fr', 'it', 'tr', 'zh-TW', 'zh-CN'];
+
+function resolveLocale(preferredLocales) {
+  for (const locale of preferredLocales) {
+    if (!locale) continue;
+
+    const normalized = locale.replace('_', '-').toLowerCase();
+    const exactMatch = supportedLocales.find((supported) => supported.toLowerCase() === normalized);
+    if (exactMatch) return exactMatch;
+
+    if (normalized === 'zh' || normalized.startsWith('zh-hant') || normalized.startsWith('zh-tw') || normalized.startsWith('zh-hk') || normalized.startsWith('zh-mo')) {
+      return 'zh-TW';
+    }
+
+    if (normalized.startsWith('zh-hans') || normalized.startsWith('zh-cn') || normalized.startsWith('zh-sg')) {
+      return 'zh-CN';
+    }
+
+    const primary = normalized.split('-')[0];
+    const primaryMatch = supportedLocales.find((supported) => supported === primary);
+    if (primaryMatch) return primaryMatch;
+  }
+
+  return 'en';
+}
+
 async function loadLocale() {
   const stored = localStorage.getItem('lang');
-  const browserLang = navigator.language?.split('-')[0] || 'en';
-  const lang = stored || browserLang;
-  const supported = ['en', 'es', 'fr', 'it', 'tr'];
-  const target = supported.includes(lang) ? lang : 'en';
+  const browserLocales = navigator.languages?.length ? navigator.languages : [navigator.language];
+  const target = resolveLocale([stored, ...browserLocales]);
   try {
     const res = await fetch(`locales/${target}.json`);
     i18n = await res.json();
@@ -1694,7 +1718,7 @@ async function loadCandidateBacklog() {
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator) || window.location.protocol === 'file:') return;
 
-  window.addEventListener('load', () => {
+  const register = () => {
     const hadController = Boolean(navigator.serviceWorker.controller);
     let serviceWorkerRefreshing = false;
 
@@ -1720,7 +1744,13 @@ function registerServiceWorker() {
       .catch((error) => {
         console.warn('Service worker registration skipped.', error);
       });
-  });
+  };
+
+  if (document.readyState === 'complete') {
+    register();
+  } else {
+    window.addEventListener('load', register, { once: true });
+  }
 }
 
 async function init() {

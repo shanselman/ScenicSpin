@@ -69,6 +69,30 @@ test('loads the production JSON route catalog and exposes PWA assets', async ({ 
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', 'icons/apple-touch-icon.png');
 });
 
+test('Chinese locales are available from the language switcher', async ({ page, request }) => {
+  const traditional = await request.get('/locales/zh-TW.json');
+  expect(traditional.ok()).toBeTruthy();
+  const traditionalJson = await traditional.json();
+  expect(traditionalJson.filter_title).toBe('搜尋與篩選');
+
+  const simplified = await request.get('/locales/zh-CN.json');
+  expect(simplified.ok()).toBeTruthy();
+  const simplifiedJson = await simplified.json();
+  expect(simplifiedJson.filter_title).toBe('搜索与筛选');
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+  await page.locator('.lang-switcher [data-lang="zh-TW"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
+  await expect(page.locator('#filterTitle')).toHaveText('搜尋與篩選');
+  await expect(page.locator('.lang-switcher [data-lang="zh-TW"]')).toHaveClass(/active-lang/);
+
+  await page.locator('.lang-switcher [data-lang="zh-CN"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+  await expect(page.locator('#filterTitle')).toHaveText('搜索与筛选');
+  await expect(page.locator('.lang-switcher [data-lang="zh-CN"]')).toHaveClass(/active-lang/);
+});
+
 test('production route cards show clean media badges without review metadata', async ({ page, request }) => {
   const catalogResponse = await request.get('/routes/catalog.json');
   const catalog = await catalogResponse.json();
