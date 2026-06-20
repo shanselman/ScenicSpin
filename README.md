@@ -315,9 +315,9 @@ Please keep the projects local‑first and privacy‑friendly: no analytics, no 
 ## 👏 Credits
 
 - **Author & maintainer:** Scott Hanselman ([@shanselman](https://github.com/shanselman))
-- **Translations:** Serdar Cevher (🇪🇸 Spanish, 🇫🇷 French, 🇮🇹 Italian, 🇹🇷 Turkish)
-  - 🇪🇸 Spanish · 🇫🇷 French · 🇮🇹 Italian — community contributors
-  - 🇹🇼 Traditional Chinese · 🇨🇳 Simplified Chinese — pending validation
+- **Translations:**
+  - Serdar Cevher — 🇪🇸 Spanish, 🇫🇷 French, 🇮🇹 Italian, 🇹🇷 Turkish
+  - Will 保哥 ([@doggy8088](https://github.com/doggy8088)) — 🇹🇼 Traditional Chinese, 🇨🇳 Simplified Chinese
 - **Scenic routes:** the original YouTube creators, whose public streams are embedded with attribution. Please support them directly.
 
 ---
