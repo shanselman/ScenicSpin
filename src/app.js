@@ -46,7 +46,7 @@ function resolveLocale(preferredLocales) {
   for (const locale of preferredLocales) {
     if (!locale) continue;
 
-    const normalized = locale.replace('_', '-').toLowerCase();
+    const normalized = locale.replaceAll('_', '-').toLowerCase();
     const exactMatch = supportedLocales.find((supported) => supported.toLowerCase() === normalized);
     if (exactMatch) return exactMatch;
 

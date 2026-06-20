@@ -93,6 +93,40 @@ test('Chinese locales are available from the language switcher', async ({ page, 
   await expect(page.locator('.lang-switcher [data-lang="zh-CN"]')).toHaveClass(/active-lang/);
 });
 
+test('Traditional Chinese browser locale variants with multiple underscores resolve to zh-TW', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'languages', {
+      configurable: true,
+      get: () => ['zh_Hant_TW', 'en-US']
+    });
+    Object.defineProperty(navigator, 'language', {
+      configurable: true,
+      get: () => 'zh_Hant_TW'
+    });
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
+  await expect(page.locator('#filterTitle')).toHaveText('搜尋與篩選');
+});
+
+test('Simplified Chinese browser locale variants with multiple underscores resolve to zh-CN', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'languages', {
+      configurable: true,
+      get: () => ['zh_Hans_CN', 'en-US']
+    });
+    Object.defineProperty(navigator, 'language', {
+      configurable: true,
+      get: () => 'zh_Hans_CN'
+    });
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('html')).toHaveAttribute('lang', 'zh-CN');
+  await expect(page.locator('#filterTitle')).toHaveText('搜索与筛选');
+});
+
 test('production route cards show clean media badges without review metadata', async ({ page, request }) => {
   const catalogResponse = await request.get('/routes/catalog.json');
   const catalog = await catalogResponse.json();
