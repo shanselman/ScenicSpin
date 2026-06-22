@@ -156,6 +156,43 @@ npm run preview:beltscape             # serves dist/beltscape at http://127.0.0.
 
 ---
 
+## 🐳 Docker
+
+You can also build, preview, and test with Docker without installing Node or Python locally.
+
+### Build the image
+
+```bash
+docker build -t scenicspin .
+```
+
+The image installs dependencies, builds the default PedalScape site into `dist/pedalscape/`, and configures the container to serve it.
+
+### Run a preview
+
+```bash
+docker run --rm -p 5173:5173 scenicspin
+```
+
+Open http://localhost:5173 to view the built PedalScape site.
+
+### Run tests
+
+> Note: the Dockerfile has Playwright browser installation commented out by default. To run end‑to‑end tests, uncomment the following line in the `Dockerfile` before building:
+>
+> ```dockerfile
+> RUN npx playwright install --with-deps || true
+> ```
+
+Then build and run the tests:
+
+```bash
+docker build -t scenicspin .
+docker run --rm --shm-size=1g scenicspin npm run test:e2e
+```
+
+---
+
 ## 🎬 Adding a Route
 
 Routes live in each site's catalog: `routes/catalog.json` (PedalScape) or `routes/beltscape-catalog.json` (BeltScape). Add an entry to the `routes` array:
