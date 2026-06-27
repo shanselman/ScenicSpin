@@ -196,6 +196,7 @@ const elements = {
   reviewDecisionsOutput: document.querySelector('#reviewDecisionsOutput'),
   playerShell: document.querySelector('#playerShell'),
   sensorPanel: document.querySelector('#sensorPanel'),
+  footerMyCadence: document.querySelector('#footerMyCadence'),
   sensorConnectionStatus: document.querySelector('#sensorConnectionStatus'),
   sensorSavedDevice: document.querySelector('#sensorSavedDevice'),
   sensorCadenceValue: document.querySelector('#sensorCadenceValue'),
@@ -229,6 +230,7 @@ function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
   let prevCrankTime = 0;
   let prevRpm = 0;
   let prevStaleness = 0;
+  let hasBaseline = false;
   let currentStalenessLimit = Math.max(2, stalenessLimit);
 
   const readUInt16LE = (bytes, index) => {
@@ -242,6 +244,7 @@ function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
       prevCrankTime = 0;
       prevRpm = 0;
       prevStaleness = 0;
+      hasBaseline = false;
       currentStalenessLimit = Math.max(2, nextLimit);
     },
     parse(bytes) {
@@ -266,6 +269,13 @@ function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
 
       if (cumCrankRev === null || lastCrankTime === null) return null;
 
+      if (!hasBaseline) {
+        prevCumCrankRev = cumCrankRev;
+        prevCrankTime = lastCrankTime;
+        hasBaseline = true;
+        return null;
+      }
+
       let deltaRotations = cumCrankRev - prevCumCrankRev;
       if (deltaRotations < 0) deltaRotations += 65536;
 
@@ -285,6 +295,7 @@ function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
 
       prevCumCrankRev = cumCrankRev;
       prevCrankTime = lastCrankTime;
+      hasBaseline = true;
       return Math.round(Math.max(0, rpm));
     }
   };
@@ -1310,6 +1321,12 @@ function setConnectivityStatus(message = '') {
   setAppStatus(message);
 }
 
+function applySiteSpecificContent() {
+  if (elements.footerMyCadence) {
+    elements.footerMyCadence.hidden = !isPedalScape;
+  }
+}
+
 function setSensorStatus(status, detail = '') {
   state.sensorStatus = status;
   state.sensorStatusDetail = detail;
@@ -2295,6 +2312,7 @@ function registerServiceWorker() {
 
 async function init() {
   await loadLocale();
+  applySiteSpecificContent();
   bindLangSwitcher();
   loadLocalState();
   bindEvents();

@@ -70,6 +70,11 @@ test('loads the production JSON route catalog and exposes PWA assets', async ({ 
   await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /width=device-width/);
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', THEME_COLOR);
   await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', 'icons/apple-touch-icon.png');
+  if (IS_PEDALSCAPE) {
+    await expect(page.locator('#footerMyCadence')).toBeVisible();
+  } else {
+    await expect(page.locator('#footerMyCadence')).toBeHidden();
+  }
 });
 
 test('Chinese locales are available from the language switcher', async ({ page, request }) => {
@@ -175,7 +180,10 @@ test('PedalScape can connect a cadence sensor and persist the saved device', asy
     .poll(() => page.evaluate(() => localStorage.getItem('scenicRideCatalog.sensorDeviceId')))
     .toBe('mock-cadence-device-1');
 
-  // flags=0x02 (crank data), cumulative crank rev=1, crank event time=1024 (1 second) => 60 rpm.
+  // First packet only establishes the baseline counters (no RPM yet).
+  await page.evaluate(() => window.__emitCadencePacket([0x02, 0x00, 0x00, 0x00, 0x00]));
+  await expect(page.locator('#sensorCadenceValue')).toHaveText('-- rpm');
+  // flags=0x02 (crank data), +1 crank rev over 1024 ticks (1 second) => 60 rpm.
   await page.evaluate(() => window.__emitCadencePacket([0x02, 0x01, 0x00, 0x00, 0x04]));
   await expect(page.locator('#sensorCadenceValue')).toHaveText('60 rpm');
 });
