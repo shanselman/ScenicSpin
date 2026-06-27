@@ -178,35 +178,36 @@
               fullscreen mode, and source links for browser fallback.
             </p>
             <dl class="metadata-list" id="selectedMetadata"></dl>
-            <section id="sensorPanel" class="sensor-panel" aria-labelledby="sensorTitle" hidden>
-              <div class="sensor-panel-heading">
-                <p class="eyebrow" data-i18n="sensor_eyebrow">Cadence sensor</p>
-                <h4 id="sensorTitle" data-i18n="sensor_title">Bluetooth cadence</h4>
-              </div>
-              <p id="sensorConnectionStatus" class="sensor-status" role="status" aria-live="polite" data-i18n="sensor_status_idle">Connect a cadence sensor to start.</p>
-              <dl class="sensor-summary">
-                <div>
-                  <dt data-i18n="sensor_saved_label">Saved sensor</dt>
-                  <dd id="sensorSavedDevice" data-i18n="sensor_saved_none">None</dd>
-                </div>
-                <div>
-                  <dt data-i18n="sensor_cadence_label">Current cadence</dt>
-                  <dd id="sensorCadenceValue" data-i18n="sensor_cadence_placeholder">-- rpm</dd>
-                </div>
-              </dl>
-              <div class="sensor-actions">
-                <button id="connectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_connect_button">Connect sensor</button>
-                <button id="reconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_reconnect_button">Reconnect saved sensor</button>
-                <button id="disconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_disconnect_button">Disconnect</button>
-                <button id="forgetSensorButton" class="secondary-button compact-button danger-button" type="button" data-i18n="sensor_forget_button">Forget saved sensor</button>
-              </div>
-            </section>
             <div class="{{ACTIVITY_NOUN_SINGULAR}}-actions">
               <button id="startRideButton" class="primary-button" type="button" disabled data-i18n="start_button">Start {{ACTIVITY_NOUN_SINGULAR}}</button>
               <button id="favoriteRouteButton" class="secondary-button" type="button" disabled data-i18n="favorite_button_save">Save favorite ☆</button>
               <a id="sourceLink" class="secondary-button disabled-link" href="#" target="_blank" rel="noopener" data-i18n="source_link_text">Open source</a>
             </div>
           </aside>
+
+          <section id="sensorPanel" class="sensor-panel" aria-labelledby="sensorTitle" hidden>
+            <div class="sensor-panel-heading">
+              <p class="eyebrow" data-i18n="sensor_eyebrow">Cadence sensor</p>
+              <h4 id="sensorTitle" data-i18n="sensor_title">Bluetooth cadence</h4>
+            </div>
+            <p id="sensorConnectionStatus" class="sensor-status" role="status" aria-live="polite" data-i18n="sensor_status_idle">Connect a cadence sensor to start.</p>
+            <dl class="sensor-summary">
+              <div>
+                <dt data-i18n="sensor_saved_label">Saved sensor</dt>
+                <dd id="sensorSavedDevice" data-i18n="sensor_saved_none">None</dd>
+              </div>
+              <div>
+                <dt data-i18n="sensor_cadence_label">Current cadence</dt>
+                <dd id="sensorCadenceValue" data-i18n="sensor_cadence_placeholder">-- rpm</dd>
+              </div>
+            </dl>
+            <div class="sensor-actions">
+              <button id="connectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_connect_button">Connect sensor</button>
+              <button id="reconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_reconnect_button">Reconnect saved sensor</button>
+              <button id="disconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_disconnect_button">Disconnect</button>
+              <button id="forgetSensorButton" class="secondary-button compact-button danger-button" type="button" data-i18n="sensor_forget_button">Forget saved sensor</button>
+            </div>
+          </section>
         </article>
       </section>
 

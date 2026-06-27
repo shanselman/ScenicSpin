@@ -198,6 +198,16 @@ test('PedalScape can simulate a cadence sensor from a debug URL flag', async ({ 
   await expect(page.locator('#sensorSavedDevice')).toHaveText('Debug cadence sensor');
   await expect(page.locator('#sensorCadenceValue')).toHaveText(/\d+ rpm/);
 
+  const [playerBox, detailBox, sensorBox] = await Promise.all([
+    page.locator('#playerShell').boundingBox(),
+    page.locator('.route-detail').boundingBox(),
+    page.locator('#sensorPanel').boundingBox()
+  ]);
+  expect(playerBox).not.toBeNull();
+  expect(detailBox).not.toBeNull();
+  expect(sensorBox).not.toBeNull();
+  expect(sensorBox.y).toBeGreaterThanOrEqual(Math.max(playerBox.y + playerBox.height, detailBox.y + detailBox.height) - 1);
+
   await page.locator('#fullscreenButton').click();
   await expect(page.locator('.selected-layout')).toHaveClass(/sensor-fullscreen-modal/);
   await expect(page.locator('body')).toHaveClass(/sensor-fullscreen-open/);

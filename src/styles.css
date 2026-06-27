@@ -1078,6 +1078,9 @@ a:focus-visible {
 .selected-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(20rem, 0.8fr);
+  grid-template-areas:
+    "player detail"
+    "sensor sensor";
   gap: 1rem;
 }
 
@@ -1093,6 +1096,7 @@ a:focus-visible {
 .player-shell {
   display: grid;
   position: relative;
+  grid-area: player;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   place-items: center;
@@ -1218,6 +1222,7 @@ body.sensor-fullscreen-open {
   z-index: 9999;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  grid-template-areas: "player sensor";
   gap: 0;
   align-items: center;
   width: 100vw;
@@ -1234,24 +1239,15 @@ body.sensor-fullscreen-open {
 }
 
 .selected-layout.sensor-fullscreen-modal .route-detail {
-  display: grid;
-  align-content: center;
-  max-height: calc(100svh - clamp(1.5rem, 4vw, 3rem));
-  margin-left: clamp(0.75rem, 2vw, 1.5rem);
-  overflow: auto;
-  border-radius: 1rem;
-  background: rgba(5, 16, 21, 0.96);
-  box-shadow: none;
-}
-
-.selected-layout.sensor-fullscreen-modal #selectedDescription,
-.selected-layout.sensor-fullscreen-modal .metadata-list,
-.selected-layout.sensor-fullscreen-modal .ride-actions {
   display: none;
 }
 
 .selected-layout.sensor-fullscreen-modal .sensor-panel {
+  grid-area: sensor;
+  max-height: calc(100svh - clamp(1.5rem, 4vw, 3rem));
   margin-top: 0;
+  margin-left: clamp(0.75rem, 2vw, 1.5rem);
+  overflow: auto;
   border-width: 2px;
   padding: 1.15rem;
 }
@@ -1286,6 +1282,7 @@ body.sensor-fullscreen-open {
 }
 
 .route-detail {
+  grid-area: detail;
   padding: 1.25rem;
 }
 
@@ -1314,7 +1311,8 @@ body.sensor-fullscreen-open {
 }
 
 .sensor-panel {
-  margin: 1rem 0 1.25rem;
+  grid-area: sensor;
+  margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1rem;
   padding: 0.9rem;
@@ -1559,14 +1557,24 @@ body.sensor-fullscreen-open {
     justify-content: flex-start;
   }
 
+  .selected-layout {
+    grid-template-areas:
+      "player"
+      "detail"
+      "sensor";
+  }
+
   .selected-layout.sensor-fullscreen-modal {
     grid-template-columns: 1fr;
     grid-template-rows: minmax(0, auto) minmax(12rem, 0.45fr);
+    grid-template-areas:
+      "player"
+      "sensor";
     align-content: center;
     overflow: auto;
   }
 
-  .selected-layout.sensor-fullscreen-modal .route-detail {
+  .selected-layout.sensor-fullscreen-modal .sensor-panel {
     max-height: none;
     margin: 0.75rem 0 0;
   }
