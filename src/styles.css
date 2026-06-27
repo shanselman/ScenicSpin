@@ -337,6 +337,38 @@ h3 {
   color: var(--text);
 }
 
+/*
+ * Compact sticky controls once the hero scrolls out of view.
+ * Body gets `.controls-compact` from an IntersectionObserver in app.js.
+ * Scoped to the sticky/desktop layout (>900px) since the panel is static
+ * on smaller screens. `:not(:focus-within)` lets keyboard focus re-expand
+ * the panel so every control stays reachable.
+ */
+@media (min-width: 901px) {
+  body.controls-compact .controls-panel:not(:focus-within) {
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    gap: 0.42rem;
+    box-shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
+  }
+
+  body.controls-compact .controls-panel:not(:focus-within) .filter-heading {
+    gap: 0.18rem;
+  }
+
+  body.controls-compact .controls-panel:not(:focus-within) .filter-heading .eyebrow {
+    display: none;
+  }
+
+  body.controls-compact .controls-panel:not(:focus-within) .filter-heading h2 {
+    font-size: 1rem;
+  }
+
+  body.controls-compact .controls-panel:not(:focus-within) .quick-links {
+    display: none;
+  }
+}
+
 .filter-row {
   display: grid;
   grid-column: 1 / -1;

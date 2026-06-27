@@ -2021,6 +2021,8 @@ function selectRoute(routeId, moveToPlayer = false, options = {}) {
 function exitPwaFullscreen() {
   elements.selectedLayout?.classList.remove('pwa-fullscreen');
   elements.selectedLayout?.classList.remove('sensor-fullscreen-modal');
+  elements.selectedLayout?.removeAttribute('role');
+  elements.selectedLayout?.removeAttribute('aria-modal');
   elements.playerShell.classList.remove('pwa-fullscreen');
   document.body.classList.remove('sensor-fullscreen-open');
   removePwaFullscreenCloseButton();
@@ -2039,6 +2041,7 @@ function createPwaFullscreenCloseButton() {
   btn.textContent = '\u2715';
   btn.addEventListener('click', exitPwaFullscreen);
   target.appendChild(btn);
+  return btn;
 }
 
 function removePwaFullscreenCloseButton() {
@@ -2054,9 +2057,12 @@ async function requestFullscreen() {
     }
 
     elements.selectedLayout.classList.add('sensor-fullscreen-modal');
+    elements.selectedLayout.setAttribute('role', 'dialog');
+    elements.selectedLayout.setAttribute('aria-modal', 'true');
     document.body.classList.add('sensor-fullscreen-open');
-    createPwaFullscreenCloseButton();
+    const closeButton = createPwaFullscreenCloseButton();
     updateFullscreenButton();
+    closeButton?.focus({ preventScroll: true });
     return;
   }
 
@@ -2418,6 +2424,29 @@ function registerServiceWorker() {
   }
 }
 
+function setupCompactControls() {
+  const hero = document.querySelector('.hero');
+  const controlsPanel = document.querySelector('.controls-panel');
+  if (!hero || !controlsPanel) return;
+
+  // Fallback: without IntersectionObserver, leave the panel in its default
+  // (expanded) state so search and filters stay fully usable.
+  if (typeof IntersectionObserver !== 'function') return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        // Compact the sticky controls only once the hero has scrolled out of
+        // view; expand again as soon as any part of the hero is visible.
+        document.body.classList.toggle('controls-compact', !entry.isIntersecting);
+      }
+    },
+    { threshold: 0 }
+  );
+
+  observer.observe(hero);
+}
+
 async function init() {
   await loadLocale();
   applySiteSpecificContent();
@@ -2426,6 +2455,7 @@ async function init() {
   bindEvents();
   startDebugSensor();
   renderSensorPanel();
+  setupCompactControls();
   if (navigator.onLine === false) setConnectivityStatus(t('offline_ready'));
   loadCatalog();
   autoReconnectSavedSensor().catch((error) => {

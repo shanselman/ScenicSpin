@@ -210,8 +210,17 @@ test('PedalScape can simulate a cadence sensor from a debug URL flag', async ({ 
 
   await page.locator('#fullscreenButton').click();
   await expect(page.locator('.selected-layout')).toHaveClass(/sensor-fullscreen-modal/);
+  await expect(page.locator('.selected-layout')).toHaveAttribute('role', 'dialog');
+  await expect(page.locator('.selected-layout')).toHaveAttribute('aria-modal', 'true');
   await expect(page.locator('body')).toHaveClass(/sensor-fullscreen-open/);
+  await expect(page.locator('#pwaFullscreenClose')).toBeFocused();
 
+  await page.locator('#pwaFullscreenClose').click();
+  await expect(page.locator('.selected-layout')).not.toHaveClass(/sensor-fullscreen-modal/);
+  await expect(page.locator('body')).not.toHaveClass(/sensor-fullscreen-open/);
+
+  await page.locator('#fullscreenButton').click();
+  await expect(page.locator('.selected-layout')).toHaveClass(/sensor-fullscreen-modal/);
   await page.keyboard.press('Escape');
   await expect(page.locator('.selected-layout')).not.toHaveClass(/sensor-fullscreen-modal/);
 });
