@@ -45,6 +45,7 @@ ScenicSpin ships as two independent, white‑labeled sites built from the same t
 - **Privacy‑friendly embeds** — Videos use `youtube-nocookie.com` and link/embed official public streams only (never downloaded or rehosted).
 - **7 languages** — English, Spanish, French, Italian, Turkish, Traditional Chinese, and Simplified Chinese, with runtime `{{token}}` substitution.
 - **Filter & search** — Browse routes by scenery, terrain, difficulty, and duration.
+- **Bluetooth cadence (PedalScape)** — Pair a CSC cadence sensor, reconnect to the saved device, and see live RPM while riding.
 
 ---
 
@@ -138,6 +139,8 @@ npm run preview:beltscape             # serves dist/beltscape at http://127.0.0.
 ```
 
 > ⚠️ **Always preview the built `dist/` output, not the repo root.** The root files contain raw `{{TOKENS}}` and won't render correctly until the build substitutes them.
+
+> ℹ️ **Bluetooth note:** Cadence sensor support uses the Web Bluetooth API and currently ships for **PedalScape** only. Browser/device support varies; unsupported browsers still run the full route catalog and player experience.
 
 ### Handy scripts
 

@@ -4,6 +4,7 @@ const SITE_NAME = siteConfig.siteName;
 const SITE_SLUG = siteConfig.siteSlug;
 const ACTIVITY_NOUN = siteConfig.activityNounSingular;   // 'ride' or 'walk'
 const ACTIVITY_NOUN_S = siteConfig.activityNounSingular; // 'ride' or 'walk'
+const IS_PEDALSCAPE = SITE_SLUG === 'pedalscape';
 const BG_COLOR = siteConfig.bgColor;
 const THEME_COLOR = siteConfig.themeColor;
 const CACHE_NAME = siteConfig.cacheName;
@@ -115,6 +116,68 @@ test('Traditional Chinese browser locale variants with multiple underscores reso
   await page.goto('/', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('html')).toHaveAttribute('lang', 'zh-TW');
   await expect(page.locator('#filterTitle')).toHaveText('搜尋與篩選');
+});
+
+test('PedalScape can connect a cadence sensor and persist the saved device', async ({ page }) => {
+  test.skip(!IS_PEDALSCAPE, 'Bluetooth cadence UI is PedalScape-only for now.');
+
+  await page.addInitScript(() => {
+    const characteristicListeners = new Map();
+    const cadenceCharacteristic = {
+      startNotifications: () => Promise.resolve(cadenceCharacteristic),
+      stopNotifications: () => Promise.resolve(),
+      addEventListener: (type, listener) => characteristicListeners.set(type, listener),
+      removeEventListener: (type) => characteristicListeners.delete(type)
+    };
+    const cadenceService = {
+      getCharacteristic: () => Promise.resolve(cadenceCharacteristic)
+    };
+    const mockDevice = {
+      id: 'mock-cadence-device-1',
+      name: 'Mock Cadence Sensor',
+      gatt: {
+        connected: false,
+        connect: function connect() {
+          this.connected = true;
+          return Promise.resolve({
+            getPrimaryService: () => Promise.resolve(cadenceService)
+          });
+        },
+        disconnect: function disconnect() {
+          this.connected = false;
+        }
+      },
+      addEventListener() {},
+      removeEventListener() {}
+    };
+
+    window.__emitCadencePacket = (bytes) => {
+      const listener = characteristicListeners.get('characteristicvaluechanged');
+      if (!listener) return;
+      const buffer = Uint8Array.from(bytes).buffer;
+      listener({ target: { value: new DataView(buffer) } });
+    };
+
+    Object.defineProperty(navigator, 'bluetooth', {
+      configurable: true,
+      value: {
+        requestDevice: () => Promise.resolve(mockDevice),
+        getDevices: () => Promise.resolve([mockDevice])
+      }
+    });
+  });
+
+  await loadCatalog(page);
+  await expect(page.locator('#sensorPanel')).toBeVisible();
+  await page.locator('#connectSensorButton').click();
+  await expect(page.locator('#sensorConnectionStatus')).toContainText('Connected');
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('scenicRideCatalog.sensorDeviceId')))
+    .toBe('mock-cadence-device-1');
+
+  // flags=0x02 (crank data), cumulative crank rev=1, crank event time=1024 (1 second) => 60 rpm.
+  await page.evaluate(() => window.__emitCadencePacket([0x02, 0x01, 0x00, 0x00, 0x04]));
+  await expect(page.locator('#sensorCadenceValue')).toHaveText('60 rpm');
 });
 
 test('Simplified Chinese browser locale variants with multiple underscores resolve to zh-CN', async ({ page }) => {
@@ -452,14 +515,23 @@ test('reset local data clears favorites, recents, selected route, and filters', 
     selected: localStorage.getItem('scenicRideCatalog.selectedRouteId'),
     favorites: localStorage.getItem('scenicRideCatalog.favoriteRouteIds'),
     recents: localStorage.getItem('scenicRideCatalog.recentRouteIds'),
-    preferences: localStorage.getItem('scenicRideCatalog.filterPreferences')
+    preferences: localStorage.getItem('scenicRideCatalog.filterPreferences'),
+    sensorId: localStorage.getItem('scenicRideCatalog.sensorDeviceId'),
+    sensorName: localStorage.getItem('scenicRideCatalog.sensorDeviceName')
   }));
-  expect(localState).toEqual({
+  const expectedState = {
     selected: null,
     favorites: null,
     recents: null,
-    preferences: null
-  });
+    preferences: null,
+    sensorId: null,
+    sensorName: null
+  };
+  if (!IS_PEDALSCAPE) {
+    expectedState.sensorId = null;
+    expectedState.sensorName = null;
+  }
+  expect(localState).toEqual(expectedState);
 });
 
 test('install prompt surfaces install button and handles acceptance', async ({ page }) => {
@@ -569,12 +641,10 @@ test(`exports only ${SITE_NAME} local data and imports a validated backup`, asyn
     return JSON.parse(document.querySelector('#backupJsonOutput').value);
   });
   expect(backup).toMatchObject({ app: SITE_NAME, schemaVersion: 1 });
-  expect(Object.keys(backup.localData).sort()).toEqual([
-    'favoriteRouteIds',
-    'filterPreferences',
-    'recentRouteIds',
-    'selectedRouteId'
-  ]);
+  const expectedBackupKeys = IS_PEDALSCAPE
+    ? ['favoriteRouteIds', 'filterPreferences', 'recentRouteIds', 'selectedRouteId', 'sensorDeviceId', 'sensorDeviceName']
+    : ['favoriteRouteIds', 'filterPreferences', 'recentRouteIds', 'selectedRouteId'];
+  expect(Object.keys(backup.localData).sort()).toEqual(expectedBackupKeys);
   expect(backup.localData.unrelated).toBeUndefined();
 
   const firstCard = page.locator('.route-card').first();
@@ -587,7 +657,13 @@ test(`exports only ${SITE_NAME} local data and imports a validated backup`, asyn
       selectedRouteId: firstRouteId,
       favoriteRouteIds: [firstRouteId, 'stale-route'],
       recentRouteIds: [firstRouteId, 'stale-route'],
-      filterPreferences: { query: 'bavaria', duration: 'long', scenery: 'all', intensity: 'all', favoritesOnly: true }
+      filterPreferences: { query: 'bavaria', duration: 'long', scenery: 'all', intensity: 'all', favoritesOnly: true },
+      ...(IS_PEDALSCAPE
+        ? {
+            sensorDeviceId: 'mock-cadence-device-2',
+            sensorDeviceName: 'Saved Mock Sensor'
+          }
+        : {})
     }
   };
 
@@ -601,6 +677,10 @@ test(`exports only ${SITE_NAME} local data and imports a validated backup`, asyn
   await expect(page.locator('#favoriteCount')).toHaveText('1 favorite');
   expect(await page.evaluate(() => localStorage.getItem('unrelated.key'))).toBe('leave me alone');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('scenicRideCatalog.favoriteRouteIds')))).toEqual([firstRouteId]);
+  if (IS_PEDALSCAPE) {
+    expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.sensorDeviceId'))).toBe('mock-cadence-device-2');
+    expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.sensorDeviceName'))).toBe('Saved Mock Sensor');
+  }
 });
 
 test('rejects invalid local backup before writing app data', async ({ page }) => {

@@ -10,15 +10,25 @@ const selectedRouteStorageKey = 'scenicRideCatalog.selectedRouteId';
 const favoriteRoutesStorageKey = 'scenicRideCatalog.favoriteRouteIds';
 const recentRoutesStorageKey = 'scenicRideCatalog.recentRouteIds';
 const filterPreferencesStorageKey = 'scenicRideCatalog.filterPreferences';
+const sensorDeviceIdStorageKey = 'scenicRideCatalog.sensorDeviceId';
+const sensorDeviceNameStorageKey = 'scenicRideCatalog.sensorDeviceName';
 const candidateReviewDecisionsStorageKey = '{{SITE_NAME}}.reviewDecisions';
 const localBackupSchemaVersion = 1;
 const localBackupAppName = '{{SITE_NAME}}';
+const siteSlug = '{{SITE_SLUG}}';
+const isPedalScape = siteSlug === 'pedalscape';
 const localStorageKeys = [
   selectedRouteStorageKey,
   favoriteRoutesStorageKey,
   recentRoutesStorageKey,
-  filterPreferencesStorageKey
+  filterPreferencesStorageKey,
+  ...(isPedalScape ? [sensorDeviceIdStorageKey, sensorDeviceNameStorageKey] : [])
 ];
+const cadenceServiceUuid = '00001816-0000-1000-8000-00805f9b34fb';
+const cadenceMeasurementUuid = '00002a5b-0000-1000-8000-00805f9b34fb';
+const defaultCadenceStalenessLimit = 4;
+const minValidCadenceRpm = 0;
+const maxValidCadenceRpm = 200;
 const defaultRecommendationId = 'bavarian-countryside-90-minute-4k';
 const maxRecentRoutes = 5;
 const maxRouteOverlayBadges = 4;
@@ -153,7 +163,13 @@ const state = {
   reviewMode: false,
   candidateCopyMessage: '',
   candidateReviewDecisions: {},
-  reviewDecisionStatus: ''
+  reviewDecisionStatus: '',
+  sensorStatus: 'idle',
+  sensorStatusDetail: '',
+  sensorDeviceId: null,
+  sensorDeviceName: '',
+  sensorCurrentRpm: null,
+  sensorAutoReconnectAttempted: false
 };
 
 const elements = {
@@ -179,6 +195,14 @@ const elements = {
   reviewDecisionStatus: document.querySelector('#reviewDecisionStatus'),
   reviewDecisionsOutput: document.querySelector('#reviewDecisionsOutput'),
   playerShell: document.querySelector('#playerShell'),
+  sensorPanel: document.querySelector('#sensorPanel'),
+  sensorConnectionStatus: document.querySelector('#sensorConnectionStatus'),
+  sensorSavedDevice: document.querySelector('#sensorSavedDevice'),
+  sensorCadenceValue: document.querySelector('#sensorCadenceValue'),
+  connectSensorButton: document.querySelector('#connectSensorButton'),
+  reconnectSensorButton: document.querySelector('#reconnectSensorButton'),
+  disconnectSensorButton: document.querySelector('#disconnectSensorButton'),
+  forgetSensorButton: document.querySelector('#forgetSensorButton'),
   selectedTitle: document.querySelector('#selectedTitle'),
   selectedDescription: document.querySelector('#selectedDescription'),
   selectedMetadata: document.querySelector('#selectedMetadata'),
@@ -195,6 +219,76 @@ const elements = {
   appStatus: document.querySelector('#appStatus'),
   backupJsonOutput: document.querySelector('#backupJsonOutput')
 };
+
+let bluetoothDevice = null;
+let cadenceCharacteristic = null;
+const cadenceParser = createCadenceParser(defaultCadenceStalenessLimit);
+
+function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
+  let prevCumCrankRev = 0;
+  let prevCrankTime = 0;
+  let prevRpm = 0;
+  let prevStaleness = 0;
+  let currentStalenessLimit = Math.max(2, stalenessLimit);
+
+  const readUInt16LE = (bytes, index) => {
+    if (index + 1 >= bytes.length) return null;
+    return bytes[index] | (bytes[index + 1] << 8);
+  };
+
+  return {
+    reset(nextLimit = currentStalenessLimit) {
+      prevCumCrankRev = 0;
+      prevCrankTime = 0;
+      prevRpm = 0;
+      prevStaleness = 0;
+      currentStalenessLimit = Math.max(2, nextLimit);
+    },
+    parse(bytes) {
+      if (!Array.isArray(bytes) || bytes.length === 0) return null;
+      const flags = bytes[0];
+      const hasWheel = (flags & 0b00000001) !== 0;
+      const hasCrank = (flags & 0b00000010) !== 0;
+      if (!hasCrank) return null;
+
+      let crankRevIndex = hasWheel ? 7 : 1;
+      let crankTimeIndex = hasWheel ? 9 : 3;
+
+      let cumCrankRev = readUInt16LE(bytes, crankRevIndex);
+      let lastCrankTime = readUInt16LE(bytes, crankTimeIndex);
+
+      if (cumCrankRev === null || lastCrankTime === null) {
+        crankRevIndex = 1;
+        crankTimeIndex = 3;
+        cumCrankRev = readUInt16LE(bytes, crankRevIndex);
+        lastCrankTime = readUInt16LE(bytes, crankTimeIndex);
+      }
+
+      if (cumCrankRev === null || lastCrankTime === null) return null;
+
+      let deltaRotations = cumCrankRev - prevCumCrankRev;
+      if (deltaRotations < 0) deltaRotations += 65535;
+
+      let timeDelta = lastCrankTime - prevCrankTime;
+      if (timeDelta < 0) timeDelta += 65535;
+
+      let rpm = 0;
+      if (timeDelta !== 0) {
+        prevStaleness = 0;
+        const timeMinutes = timeDelta / 1024 / 60;
+        rpm = timeMinutes > 0 ? deltaRotations / timeMinutes : 0;
+        prevRpm = rpm;
+      } else if (prevStaleness < currentStalenessLimit) {
+        rpm = prevRpm;
+        prevStaleness += 1;
+      }
+
+      prevCumCrankRev = cumCrankRev;
+      prevCrankTime = lastCrankTime;
+      return Math.round(Math.max(0, rpm));
+    }
+  };
+}
 
 function titleCase(value) {
   if (typeof value !== 'string') return '';
@@ -423,6 +517,61 @@ function saveSelectedRouteId(routeId) {
   }
 }
 
+function isWebBluetoothSupported() {
+  return Boolean(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
+}
+
+function canReconnectSavedSensor() {
+  return Boolean(navigator.bluetooth && typeof navigator.bluetooth.getDevices === 'function');
+}
+
+function readStoredSensorDeviceId() {
+  if (!isPedalScape) return null;
+  try {
+    const value = localStorage.getItem(sensorDeviceIdStorageKey);
+    return typeof value === 'string' && value.trim() ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredSensorDeviceName() {
+  if (!isPedalScape) return '';
+  try {
+    return localStorage.getItem(sensorDeviceNameStorageKey) || '';
+  } catch {
+    return '';
+  }
+}
+
+function saveStoredSensor(deviceId, deviceName = '') {
+  if (!isPedalScape || !deviceId) return;
+  try {
+    localStorage.setItem(sensorDeviceIdStorageKey, deviceId);
+    if (deviceName) {
+      localStorage.setItem(sensorDeviceNameStorageKey, deviceName);
+    } else {
+      localStorage.removeItem(sensorDeviceNameStorageKey);
+    }
+  } catch {
+    // Local app features gracefully degrade when storage is disabled.
+  }
+  state.sensorDeviceId = deviceId;
+  state.sensorDeviceName = deviceName || '';
+}
+
+function clearStoredSensor() {
+  if (!isPedalScape) return;
+  try {
+    localStorage.removeItem(sensorDeviceIdStorageKey);
+    localStorage.removeItem(sensorDeviceNameStorageKey);
+  } catch {
+    // Local app features gracefully degrade when storage is disabled.
+  }
+  state.sensorDeviceId = null;
+  state.sensorDeviceName = '';
+}
+
 function readLocalJson(key, fallback) {
   try {
     const value = localStorage.getItem(key);
@@ -466,6 +615,13 @@ function loadLocalState() {
   state.favoriteRouteIds = new Set(Array.isArray(favoriteRouteIds) ? favoriteRouteIds.filter((id) => typeof id === 'string') : []);
   state.recentRouteIds = Array.isArray(recentRouteIds) ? recentRouteIds.filter((id) => typeof id === 'string') : [];
   state.candidateReviewDecisions = normalizeCandidateReviewDecisions(readLocalJson(candidateReviewDecisionsStorageKey, {}));
+  if (isPedalScape) {
+    state.sensorDeviceId = readStoredSensorDeviceId();
+    state.sensorDeviceName = readStoredSensorDeviceName();
+    state.sensorStatus = isWebBluetoothSupported() ? 'disconnected' : 'unsupported';
+    state.sensorStatusDetail = '';
+    state.sensorCurrentRpm = null;
+  }
 }
 
 function routeExists(routeId) {
@@ -583,7 +739,7 @@ function applyFilterPreferences() {
 }
 
 function getLocalBackupData() {
-  return {
+  const backup = {
     selectedRouteId: readStoredRouteId() || null,
     favoriteRouteIds: [...state.favoriteRouteIds],
     recentRouteIds: state.recentRouteIds,
@@ -595,6 +751,13 @@ function getLocalBackupData() {
       favoritesOnly: state.favoritesOnly
     }
   };
+
+  if (isPedalScape) {
+    backup.sensorDeviceId = state.sensorDeviceId || null;
+    backup.sensorDeviceName = state.sensorDeviceName || null;
+  }
+
+  return backup;
 }
 
 function buildLocalBackup() {
@@ -659,7 +822,19 @@ function validateLocalBackup(backup) {
     selectedRouteId,
     favoriteRouteIds: normalizeStringArray(data.favoriteRouteIds ?? [], 'favoriteRouteIds'),
     recentRouteIds: normalizeStringArray(data.recentRouteIds ?? [], 'recentRouteIds').slice(0, maxRecentRoutes),
-    filterPreferences: normalizeFilterPreferences(data.filterPreferences)
+    filterPreferences: normalizeFilterPreferences(data.filterPreferences),
+    sensorDeviceId:
+      data.sensorDeviceId == null
+        ? null
+        : typeof data.sensorDeviceId === 'string'
+          ? data.sensorDeviceId
+          : (() => { throw new Error('sensorDeviceId must be a string or null.'); })(),
+    sensorDeviceName:
+      data.sensorDeviceName == null
+        ? null
+        : typeof data.sensorDeviceName === 'string'
+          ? data.sensorDeviceName
+          : (() => { throw new Error('sensorDeviceName must be a string or null.'); })()
   };
 }
 
@@ -704,10 +879,22 @@ function applyImportedLocalData(data) {
   writeLocalJson(favoriteRoutesStorageKey, data.favoriteRouteIds);
   writeLocalJson(recentRoutesStorageKey, data.recentRouteIds);
   writeLocalJson(filterPreferencesStorageKey, data.filterPreferences);
+  if (isPedalScape) {
+    if (typeof data.sensorDeviceId === 'string' && data.sensorDeviceId) {
+      saveStoredSensor(data.sensorDeviceId, data.sensorDeviceName || '');
+    } else {
+      clearStoredSensor();
+    }
+  }
 
   loadLocalState();
+  state.sensorAutoReconnectAttempted = false;
+  renderSensorPanel();
   cleanupLocalRouteIds();
   applyFilterPreferences();
+  autoReconnectSavedSensor().catch(() => {
+    // Import should succeed even if reconnect is unavailable.
+  });
 
   const featured = routes.length > 0 ? chooseFeaturedRoute() : { route: null, mode: 'recommended' };
   setFeaturedRoute(featured.route, featured.mode);
@@ -1123,6 +1310,239 @@ function setConnectivityStatus(message = '') {
   setAppStatus(message);
 }
 
+function setSensorStatus(status, detail = '') {
+  state.sensorStatus = status;
+  state.sensorStatusDetail = detail;
+  renderSensorPanel();
+}
+
+function getSensorStatusLabel() {
+  if (!isPedalScape) return '';
+
+  if (state.sensorStatusDetail) return state.sensorStatusDetail;
+
+  switch (state.sensorStatus) {
+    case 'unsupported':
+      return t('sensor_status_unsupported');
+    case 'scanning':
+      return t('sensor_status_scanning');
+    case 'connecting':
+      return t('sensor_status_connecting');
+    case 'reconnecting':
+      return t('sensor_status_reconnecting');
+    case 'connected':
+      return state.sensorDeviceName
+        ? t('sensor_status_connected_named', { name: state.sensorDeviceName })
+        : t('sensor_status_connected');
+    case 'error':
+      return t('sensor_status_error');
+    case 'disconnected':
+      return t('sensor_status_disconnected');
+    default:
+      return t('sensor_status_idle');
+  }
+}
+
+function renderSensorPanel() {
+  if (!elements.sensorPanel) return;
+
+  if (!isPedalScape) {
+    elements.sensorPanel.hidden = true;
+    return;
+  }
+
+  elements.sensorPanel.hidden = false;
+  const supported = isWebBluetoothSupported();
+  const connected = Boolean(bluetoothDevice?.gatt?.connected);
+  const busy = ['scanning', 'connecting', 'reconnecting'].includes(state.sensorStatus);
+  const canReconnect = canReconnectSavedSensor() && Boolean(state.sensorDeviceId);
+
+  if (!supported && state.sensorStatus !== 'unsupported') {
+    state.sensorStatus = 'unsupported';
+    state.sensorStatusDetail = '';
+  }
+
+  elements.sensorConnectionStatus.textContent = getSensorStatusLabel();
+  elements.sensorSavedDevice.textContent = state.sensorDeviceName || t('sensor_saved_none');
+  elements.sensorCadenceValue.textContent = Number.isFinite(state.sensorCurrentRpm)
+    ? t('sensor_cadence_value', { rpm: state.sensorCurrentRpm })
+    : t('sensor_cadence_placeholder');
+
+  elements.connectSensorButton.disabled = !supported || busy;
+  elements.reconnectSensorButton.disabled = !supported || busy || !canReconnect;
+  elements.disconnectSensorButton.disabled = !supported || busy || !connected;
+  elements.forgetSensorButton.disabled = !state.sensorDeviceId;
+  renderPlayerSensorOverlay();
+}
+
+function renderPlayerSensorOverlay() {
+  const existingOverlay = elements.playerShell.querySelector('.player-sensor-overlay');
+  if (existingOverlay) existingOverlay.remove();
+  if (!isPedalScape || !state.selectedRoute) return;
+  if (!bluetoothDevice?.gatt?.connected) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'player-sensor-overlay';
+  overlay.innerHTML = `
+    <span class="player-sensor-overlay__label">${escapeHtml(t('sensor_title'))}</span>
+    <strong class="player-sensor-overlay__value">${escapeHtml(Number.isFinite(state.sensorCurrentRpm) ? t('sensor_cadence_value', { rpm: state.sensorCurrentRpm }) : t('sensor_cadence_placeholder'))}</strong>
+  `;
+  elements.playerShell.append(overlay);
+}
+
+function handleCadenceMeasurementChanged(event) {
+  const characteristic = event?.target;
+  const value = characteristic?.value;
+  if (!value) return;
+
+  const bytes = Array.from(new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+  const rpm = cadenceParser.parse(bytes);
+  if (!Number.isFinite(rpm) || rpm < minValidCadenceRpm || rpm > maxValidCadenceRpm) {
+    state.sensorCurrentRpm = null;
+    renderSensorPanel();
+    return;
+  }
+  state.sensorCurrentRpm = rpm;
+  renderSensorPanel();
+}
+
+async function disconnectSensor(options = {}) {
+  const { clearSaved = false, keepStatus = false } = options;
+  const previousDevice = bluetoothDevice;
+
+  if (cadenceCharacteristic) {
+    cadenceCharacteristic.removeEventListener('characteristicvaluechanged', handleCadenceMeasurementChanged);
+    try {
+      await cadenceCharacteristic.stopNotifications();
+    } catch {
+      // Ignore stop notification errors while tearing down connection state.
+    }
+    cadenceCharacteristic = null;
+  }
+
+  if (previousDevice) {
+    previousDevice.removeEventListener('gattserverdisconnected', handleSensorDisconnected);
+    try {
+      if (previousDevice.gatt?.connected) previousDevice.gatt.disconnect();
+    } catch {
+      // Ignore disconnect errors while tearing down connection state.
+    }
+  }
+
+  bluetoothDevice = null;
+  cadenceParser.reset();
+  state.sensorCurrentRpm = null;
+
+  if (clearSaved) clearStoredSensor();
+  if (!keepStatus) setSensorStatus('disconnected');
+}
+
+function handleSensorDisconnected() {
+  cadenceCharacteristic = null;
+  bluetoothDevice = null;
+  state.sensorCurrentRpm = null;
+  setSensorStatus('disconnected');
+}
+
+async function connectToSensorDevice(device, { status = 'connecting' } = {}) {
+  if (!device) {
+    setSensorStatus('error', t('sensor_status_error'));
+    return;
+  }
+
+  await disconnectSensor({ keepStatus: true });
+  setSensorStatus(status);
+
+  try {
+    if (!device.gatt) throw new Error(t('sensor_status_gatt_unavailable'));
+    bluetoothDevice = device;
+    bluetoothDevice.addEventListener('gattserverdisconnected', handleSensorDisconnected);
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(cadenceServiceUuid);
+    const characteristic = await service.getCharacteristic(cadenceMeasurementUuid);
+    await characteristic.startNotifications();
+    characteristic.addEventListener('characteristicvaluechanged', handleCadenceMeasurementChanged);
+    cadenceCharacteristic = characteristic;
+    cadenceParser.reset();
+    state.sensorCurrentRpm = null;
+
+    const deviceName = device.name || state.sensorDeviceName || '';
+    saveStoredSensor(device.id, deviceName);
+    setSensorStatus('connected');
+  } catch (error) {
+    const message = error?.message ? t('sensor_status_error_with_detail', { message: error.message }) : t('sensor_status_error');
+    await disconnectSensor({ keepStatus: true });
+    setSensorStatus('error', message);
+  }
+}
+
+async function connectSensorFromPicker() {
+  if (!isPedalScape) return;
+  if (!isWebBluetoothSupported()) {
+    setSensorStatus('unsupported');
+    return;
+  }
+
+  setSensorStatus('scanning');
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [cadenceServiceUuid] }],
+      optionalServices: [cadenceServiceUuid]
+    });
+    if (!device) {
+      setSensorStatus('disconnected');
+      return;
+    }
+    await connectToSensorDevice(device, { status: 'connecting' });
+  } catch (error) {
+    if (error?.name === 'NotFoundError') {
+      setSensorStatus('disconnected', t('sensor_status_cancelled'));
+      return;
+    }
+    const message = error?.message ? t('sensor_status_error_with_detail', { message: error.message }) : t('sensor_status_error');
+    setSensorStatus('error', message);
+  }
+}
+
+async function reconnectSavedSensor() {
+  if (!isPedalScape || !state.sensorDeviceId) return;
+
+  if (!isWebBluetoothSupported()) {
+    setSensorStatus('unsupported');
+    return;
+  }
+
+  if (!canReconnectSavedSensor()) {
+    setSensorStatus('error', t('sensor_status_reconnect_unavailable'));
+    return;
+  }
+
+  setSensorStatus('reconnecting');
+  try {
+    const devices = await navigator.bluetooth.getDevices();
+    const saved = devices.find((device) => device.id === state.sensorDeviceId);
+    if (!saved) {
+      setSensorStatus('disconnected', t('sensor_status_saved_not_found'));
+      return;
+    }
+    await connectToSensorDevice(saved, { status: 'reconnecting' });
+  } catch (error) {
+    const message = error?.message ? t('sensor_status_error_with_detail', { message: error.message }) : t('sensor_status_error');
+    setSensorStatus('error', message);
+  }
+}
+
+async function autoReconnectSavedSensor() {
+  if (!isPedalScape || state.sensorAutoReconnectAttempted) return;
+  state.sensorAutoReconnectAttempted = true;
+  if (!state.sensorDeviceId || !isWebBluetoothSupported() || !canReconnectSavedSensor()) {
+    renderSensorPanel();
+    return;
+  }
+  await reconnectSavedSensor();
+}
+
 function showUpdateReady(worker) {
   pendingServiceWorker = worker;
   applyingServiceWorkerUpdate = false;
@@ -1398,6 +1818,7 @@ function clearSelectedRoute(message) {
       <p>${escapeHtml(t('player_placeholder'))}</p>
     </div>
   `;
+  renderSensorPanel();
 }
 
 function renderSelectedRoute() {
@@ -1425,6 +1846,7 @@ function renderSelectedRoute() {
   elements.sourceLink.href = route.sourceUrl;
   elements.sourceLink.classList.remove('disabled-link');
   elements.sourceLink.setAttribute('aria-label', t('source_link_aria', { title: route.title }));
+  renderSensorPanel();
 }
 
 function toggleFavorite(routeId) {
@@ -1454,6 +1876,7 @@ function loadPlayer(route, autoplay = false) {
 
   if (!route.embeddingAllowed) {
     elements.playerShell.innerHTML = `<p class="player-message">${escapeHtml(t('player_embed_not_allowed'))}</p>`;
+    renderPlayerSensorOverlay();
     return;
   }
 
@@ -1464,6 +1887,7 @@ function loadPlayer(route, autoplay = false) {
     iframe.allowFullscreen = true;
     iframe.src = buildEmbedUrl(route, autoplay);
     elements.playerShell.append(iframe);
+    renderPlayerSensorOverlay();
     return;
   }
 
@@ -1472,6 +1896,7 @@ function loadPlayer(route, autoplay = false) {
   video.playsInline = true;
   video.src = route.sourceUrl;
   elements.playerShell.append(video);
+  renderPlayerSensorOverlay();
 }
 
 function selectRoute(routeId, moveToPlayer = false, options = {}) {
@@ -1605,6 +2030,7 @@ function resetLocalData() {
   state.scenery = 'all';
   state.intensity = 'all';
   state.favoritesOnly = false;
+  state.sensorAutoReconnectAttempted = false;
 
   elements.searchInput.value = '';
   elements.durationFilter.value = 'all';
@@ -1621,6 +2047,10 @@ function resetLocalData() {
     renderCatalog();
   }
 
+  disconnectSensor({ clearSaved: true }).catch(() => {
+    // Errors while disconnecting should not block local reset feedback.
+  });
+  renderSensorPanel();
   setAppStatus(t('reset_success'));
 }
 
@@ -1684,6 +2114,23 @@ function bindEvents() {
   });
 
   elements.startRideButton.addEventListener('click', startRide);
+  elements.connectSensorButton?.addEventListener('click', () => {
+    connectSensorFromPicker();
+  });
+  elements.reconnectSensorButton?.addEventListener('click', () => {
+    reconnectSavedSensor();
+  });
+  elements.disconnectSensorButton?.addEventListener('click', () => {
+    disconnectSensor().catch(() => {
+      setSensorStatus('error', t('sensor_status_error'));
+    });
+  });
+  elements.forgetSensorButton?.addEventListener('click', () => {
+    disconnectSensor({ clearSaved: true }).catch(() => {
+      clearStoredSensor();
+      setSensorStatus('disconnected');
+    });
+  });
   elements.installButton.addEventListener('click', installApp);
   elements.exportDataButton.addEventListener('click', downloadLocalBackup);
   elements.copyDataButton.addEventListener('click', copyLocalBackup);
@@ -1851,8 +2298,13 @@ async function init() {
   bindLangSwitcher();
   loadLocalState();
   bindEvents();
+  renderSensorPanel();
   if (navigator.onLine === false) setConnectivityStatus(t('offline_ready'));
   loadCatalog();
+  autoReconnectSavedSensor().catch((error) => {
+    const message = error?.message ? t('sensor_status_error_with_detail', { message: error.message }) : t('sensor_status_error');
+    setSensorStatus('error', message);
+  });
   applyReviewModeFromUrl();
   registerServiceWorker();
 }
