@@ -267,10 +267,10 @@ function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
       if (cumCrankRev === null || lastCrankTime === null) return null;
 
       let deltaRotations = cumCrankRev - prevCumCrankRev;
-      if (deltaRotations < 0) deltaRotations += 65535;
+      if (deltaRotations < 0) deltaRotations += 65536;
 
       let timeDelta = lastCrankTime - prevCrankTime;
-      if (timeDelta < 0) timeDelta += 65535;
+      if (timeDelta < 0) timeDelta += 65536;
 
       let rpm = 0;
       if (timeDelta !== 0) {
