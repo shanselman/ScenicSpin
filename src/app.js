@@ -2424,29 +2424,6 @@ function registerServiceWorker() {
   }
 }
 
-function setupCompactControls() {
-  const hero = document.querySelector('.hero');
-  const controlsPanel = document.querySelector('.controls-panel');
-  if (!hero || !controlsPanel) return;
-
-  // Fallback: without IntersectionObserver, leave the panel in its default
-  // (expanded) state so search and filters stay fully usable.
-  if (typeof IntersectionObserver !== 'function') return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        // Compact the sticky controls only once the hero has scrolled out of
-        // view; expand again as soon as any part of the hero is visible.
-        document.body.classList.toggle('controls-compact', !entry.isIntersecting);
-      }
-    },
-    { threshold: 0 }
-  );
-
-  observer.observe(hero);
-}
-
 async function init() {
   await loadLocale();
   applySiteSpecificContent();
@@ -2455,7 +2432,6 @@ async function init() {
   bindEvents();
   startDebugSensor();
   renderSensorPanel();
-  setupCompactControls();
   if (navigator.onLine === false) setConnectivityStatus(t('offline_ready'));
   loadCatalog();
   autoReconnectSavedSensor().catch((error) => {
