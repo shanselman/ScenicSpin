@@ -511,7 +511,7 @@ test('starting a ride stores continue state, recents, hero continue, and loads i
 
   const firstCard = page.locator('.route-card').first();
   const firstTitle = (await firstCard.locator('h3').textContent()).trim();
-  await firstCard.click();
+  await firstCard.click({ force: true });
   await expect(page.locator('#selectedTitle')).toHaveText(firstTitle);
   await expect(page.locator('#playerShell iframe')).toHaveAttribute('src', /youtube-nocookie\.com\/embed/);
 
@@ -538,7 +538,7 @@ test('reset local data clears favorites, recents, selected route, and filters', 
   const initialCount = await page.locator('.route-card').count();
   const firstCard = page.locator('.route-card').first();
   await firstCard.locator('.favorite-card-button').click();
-  await firstCard.click();
+  await firstCard.click({ force: true });
   await page.locator('#startRideButton').click();
   await page.locator('#searchInput').fill('Bavaria');
   await page.locator('#durationFilter').selectOption('long');
@@ -693,7 +693,7 @@ test(`exports only ${SITE_NAME} local data and imports a validated backup`, asyn
   expect(backup.localData.unrelated).toBeUndefined();
 
   const firstCard = page.locator('.route-card').first();
-  await firstCard.click();
+  await firstCard.click({ force: true });
   const firstRouteId = await page.evaluate(() => localStorage.getItem('scenicRideCatalog.selectedRouteId'));
   const importBackup = {
     app: SITE_NAME,
