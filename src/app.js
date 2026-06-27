@@ -194,6 +194,7 @@ const elements = {
   exportReviewDecisionsButton: document.querySelector('#exportReviewDecisionsButton'),
   reviewDecisionStatus: document.querySelector('#reviewDecisionStatus'),
   reviewDecisionsOutput: document.querySelector('#reviewDecisionsOutput'),
+  selectedLayout: document.querySelector('.selected-layout'),
   playerShell: document.querySelector('#playerShell'),
   sensorPanel: document.querySelector('#sensorPanel'),
   footerMyCadence: document.querySelector('#footerMyCadence'),
@@ -224,6 +225,10 @@ const elements = {
 let bluetoothDevice = null;
 let cadenceCharacteristic = null;
 const cadenceParser = createCadenceParser(defaultCadenceStalenessLimit);
+
+function isSensorConnected() {
+  return Boolean(bluetoothDevice?.gatt?.connected);
+}
 
 function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
   let prevCumCrankRev = 0;
@@ -1370,7 +1375,7 @@ function renderSensorPanel() {
 
   elements.sensorPanel.hidden = false;
   const supported = isWebBluetoothSupported();
-  const connected = Boolean(bluetoothDevice?.gatt?.connected);
+  const connected = isSensorConnected();
   const busy = ['scanning', 'connecting', 'reconnecting'].includes(state.sensorStatus);
   const canReconnect = canReconnectSavedSensor() && Boolean(state.sensorDeviceId);
 
@@ -1389,6 +1394,7 @@ function renderSensorPanel() {
   elements.reconnectSensorButton.disabled = !supported || busy || !canReconnect;
   elements.disconnectSensorButton.disabled = !supported || busy || !connected;
   elements.forgetSensorButton.disabled = !state.sensorDeviceId;
+  elements.selectedLayout?.classList.toggle('sensor-focus-active', connected);
   renderPlayerSensorOverlay();
 }
 
@@ -1937,12 +1943,15 @@ function selectRoute(routeId, moveToPlayer = false, options = {}) {
 }
 
 function exitPwaFullscreen() {
+  elements.selectedLayout?.classList.remove('pwa-fullscreen');
   elements.playerShell.classList.remove('pwa-fullscreen');
   removePwaFullscreenCloseButton();
   updateFullscreenButton();
 }
 
 function createPwaFullscreenCloseButton() {
+  const target = isSensorConnected() ? elements.selectedLayout : elements.playerShell;
+  if (!target) return;
   let btn = document.querySelector('#pwaFullscreenClose');
   if (btn) return;
   btn = document.createElement('button');
@@ -1951,7 +1960,7 @@ function createPwaFullscreenCloseButton() {
   btn.setAttribute('aria-label', t('fullscreen_close_aria'));
   btn.textContent = '\u2715';
   btn.addEventListener('click', exitPwaFullscreen);
-  elements.playerShell.appendChild(btn);
+  target.appendChild(btn);
 }
 
 function removePwaFullscreenCloseButton() {
@@ -1960,7 +1969,8 @@ function removePwaFullscreenCloseButton() {
 }
 
 async function requestFullscreen() {
-  const target = elements.playerShell;
+  const target = isSensorConnected() ? elements.selectedLayout : elements.playerShell;
+  if (!target) return;
 
   if (document.fullscreenElement || document.webkitFullscreenElement) {
     if (document.exitFullscreen) {
@@ -1992,6 +2002,7 @@ function updateFullscreenButton() {
   const isFullscreen = Boolean(
     document.fullscreenElement ||
     document.webkitFullscreenElement ||
+    elements.selectedLayout?.classList.contains('pwa-fullscreen') ||
     elements.playerShell.classList.contains('pwa-fullscreen')
   );
   elements.fullscreenButton.textContent = isFullscreen ? t('fullscreen_exit') : t('fullscreen_enter');
