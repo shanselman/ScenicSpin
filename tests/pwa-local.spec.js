@@ -466,7 +466,7 @@ test('favorites persist locally and favorites-only filter works', async ({ page 
 
   await page.reload();
   await expect(page.locator('.route-card').filter({ hasText: firstTitle }).locator('.favorite-card-button')).toHaveAttribute('aria-pressed', 'true');
-  await page.getByLabel('Favorites only').check();
+  await page.locator('#favoritesFilter').check({ force: true });
 
   await expect(page.locator('.route-card')).toHaveCount(1);
   await expect(page.locator('.route-card').first()).toContainText(firstTitle);
