@@ -188,6 +188,43 @@ test('PedalScape can connect a cadence sensor and persist the saved device', asy
   await expect(page.locator('#sensorCadenceValue')).toHaveText('60 rpm');
 });
 
+test('PedalScape can simulate a cadence sensor from a debug URL flag', async ({ page }) => {
+  test.skip(!IS_PEDALSCAPE, 'Bluetooth cadence UI is PedalScape-only for now.');
+
+  await page.goto('/?debugSensor=1', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN_S}s?$`));
+  await expect(page.locator('#sensorPanel')).toBeVisible();
+  await expect(page.locator('#sensorConnectionStatus')).toContainText('Debug cadence sensor connected.');
+  await expect(page.locator('#sensorSavedDevice')).toHaveText('Debug cadence sensor');
+  await expect(page.locator('#sensorCadenceValue')).toHaveText(/\d+ rpm/);
+
+  const [playerBox, detailBox, sensorBox] = await Promise.all([
+    page.locator('#playerShell').boundingBox(),
+    page.locator('.route-detail').boundingBox(),
+    page.locator('#sensorPanel').boundingBox()
+  ]);
+  expect(playerBox).not.toBeNull();
+  expect(detailBox).not.toBeNull();
+  expect(sensorBox).not.toBeNull();
+  expect(sensorBox.y).toBeGreaterThanOrEqual(Math.max(playerBox.y + playerBox.height, detailBox.y + detailBox.height) - 1);
+
+  await page.locator('#fullscreenButton').click();
+  await expect(page.locator('.selected-layout')).toHaveClass(/sensor-fullscreen-modal/);
+  await expect(page.locator('.selected-layout')).toHaveAttribute('role', 'dialog');
+  await expect(page.locator('.selected-layout')).toHaveAttribute('aria-modal', 'true');
+  await expect(page.locator('body')).toHaveClass(/sensor-fullscreen-open/);
+  await expect(page.locator('#pwaFullscreenClose')).toBeFocused();
+
+  await page.locator('#pwaFullscreenClose').click();
+  await expect(page.locator('.selected-layout')).not.toHaveClass(/sensor-fullscreen-modal/);
+  await expect(page.locator('body')).not.toHaveClass(/sensor-fullscreen-open/);
+
+  await page.locator('#fullscreenButton').click();
+  await expect(page.locator('.selected-layout')).toHaveClass(/sensor-fullscreen-modal/);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.selected-layout')).not.toHaveClass(/sensor-fullscreen-modal/);
+});
+
 test('Simplified Chinese browser locale variants with multiple underscores resolve to zh-CN', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'languages', {

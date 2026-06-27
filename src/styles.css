@@ -299,36 +299,35 @@ h3 {
   z-index: 10;
   display: grid;
   grid-template-columns: 1fr minmax(17rem, 26rem);
-  gap: 1rem;
+  gap: 0.7rem;
   align-items: end;
-  margin: 0.75rem 0 1rem;
-  padding: 1.25rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.9rem;
   box-shadow: 0 18px 52px rgba(0, 0, 0, 0.3);
-  transition: padding 220ms ease, gap 220ms ease, box-shadow 220ms ease;
 }
 
 .filter-heading {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.4rem;
 }
 
 .filter-heading h2 {
-  font-size: clamp(1.55rem, 2.8vw, 2.25rem);
+  font-size: clamp(1.15rem, 2.2vw, 1.65rem);
 }
 
 .quick-links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.38rem;
 }
 
 .quick-links a {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 999px;
-  padding: 0.48rem 0.72rem;
+  padding: 0.36rem 0.58rem;
   background: rgba(255, 255, 255, 0.07);
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.78rem;
   font-weight: 900;
   text-decoration: none;
 }
@@ -345,44 +344,28 @@ h3 {
  * on smaller screens. `:not(:focus-within)` lets keyboard focus re-expand
  * the panel so every control stays reachable.
  */
-.filter-heading {
-  transition: opacity 200ms ease, max-height 240ms ease, margin 220ms ease;
-}
-
-.filter-heading h2 {
-  transition: font-size 200ms ease;
-}
-
 @media (min-width: 901px) {
-  body.controls-compact .controls-panel:not(:focus-within):not(:hover) {
-    padding-top: 0.6rem;
-    padding-bottom: 0.6rem;
-    gap: 0.45rem;
+  body.controls-compact .controls-panel:not(:focus-within) {
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    gap: 0.42rem;
     box-shadow: 0 14px 38px rgba(0, 0, 0, 0.42);
   }
 
-  body.controls-compact .controls-panel:not(:focus-within):not(:hover) .filter-heading {
-    gap: 0.2rem;
+  body.controls-compact .controls-panel:not(:focus-within) .filter-heading {
+    gap: 0.18rem;
   }
 
-  body.controls-compact .controls-panel:not(:focus-within):not(:hover) .filter-heading .eyebrow {
+  body.controls-compact .controls-panel:not(:focus-within) .filter-heading .eyebrow {
     display: none;
   }
 
-  body.controls-compact .controls-panel:not(:focus-within):not(:hover) .filter-heading h2 {
-    font-size: 1.1rem;
+  body.controls-compact .controls-panel:not(:focus-within) .filter-heading h2 {
+    font-size: 1rem;
   }
 
-  body.controls-compact .controls-panel:not(:focus-within):not(:hover) .quick-links {
+  body.controls-compact .controls-panel:not(:focus-within) .quick-links {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .controls-panel,
-  .filter-heading,
-  .filter-heading h2 {
-    transition: none;
   }
 }
 
@@ -390,17 +373,18 @@ h3 {
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.85rem;
+  gap: 0.65rem;
 }
 
 .controls-panel input,
 .controls-panel select {
-  min-height: 3.15rem;
+  min-height: 2.75rem;
 }
 
 .controls-panel .toggle-field {
   align-self: end;
-  min-height: 3.15rem;
+  min-height: 2.75rem;
+  padding: 0 1rem;
 }
 
 .controls-panel .toggle-field span {
@@ -424,7 +408,7 @@ label {
 input,
 select,
 textarea {
-  min-height: 3.75rem;
+  min-height: 3.25rem;
   width: 100%;
   border: 2px solid transparent;
   border-radius: 1rem;
@@ -1077,6 +1061,9 @@ a:focus-visible {
 .selected-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(20rem, 0.8fr);
+  grid-template-areas:
+    "player detail"
+    "sensor sensor";
   gap: 1rem;
 }
 
@@ -1092,7 +1079,8 @@ a:focus-visible {
 .player-shell {
   display: grid;
   position: relative;
-  min-height: clamp(20rem, 52vw, 42rem);
+  grid-area: player;
+  aspect-ratio: 16 / 9;
   overflow: hidden;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.11);
@@ -1108,15 +1096,21 @@ a:focus-visible {
   border: 0;
 }
 
+.player-shell video {
+  object-fit: contain;
+}
+
 .player-shell:fullscreen {
   width: 100vw;
   height: 100vh;
+  aspect-ratio: auto;
   border-radius: 0;
 }
 
 .player-shell:-webkit-full-screen {
   width: 100vw;
   height: 100vh;
+  aspect-ratio: auto;
   border-radius: 0;
 }
 
@@ -1201,6 +1195,56 @@ a:focus-visible {
   line-height: 1.1;
 }
 
+body.sensor-fullscreen-open {
+  overflow: hidden;
+}
+
+.selected-layout.sensor-fullscreen-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+  grid-template-areas: "player sensor";
+  gap: 0;
+  align-items: center;
+  width: 100vw;
+  height: 100svh;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  background: #000;
+}
+
+.selected-layout.sensor-fullscreen-modal .player-shell {
+  width: 100%;
+  max-height: calc(100svh - clamp(1.5rem, 4vw, 3rem));
+  border-radius: 1rem;
+  box-shadow: none;
+}
+
+.selected-layout.sensor-fullscreen-modal .route-detail {
+  display: none;
+}
+
+.selected-layout.sensor-fullscreen-modal .sensor-panel {
+  grid-area: sensor;
+  max-height: calc(100svh - clamp(1.5rem, 4vw, 3rem));
+  margin-top: 0;
+  margin-left: clamp(0.75rem, 2vw, 1.5rem);
+  overflow: auto;
+  border-width: 2px;
+  padding: 1.15rem;
+}
+
+.selected-layout.sensor-fullscreen-modal .sensor-summary {
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.selected-layout.sensor-fullscreen-modal #sensorCadenceValue {
+  font-size: clamp(3.5rem, 10vw, 7rem);
+  line-height: 0.9;
+}
+
 .player-placeholder {
   display: grid;
   place-items: center;
@@ -1221,6 +1265,7 @@ a:focus-visible {
 }
 
 .route-detail {
+  grid-area: detail;
   padding: 1.25rem;
 }
 
@@ -1249,7 +1294,8 @@ a:focus-visible {
 }
 
 .sensor-panel {
-  margin: 1rem 0 1.25rem;
+  grid-area: sensor;
+  margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 1rem;
   padding: 0.9rem;
@@ -1493,6 +1539,32 @@ a:focus-visible {
   .footer-links {
     justify-content: flex-start;
   }
+
+  .selected-layout {
+    grid-template-areas:
+      "player"
+      "detail"
+      "sensor";
+  }
+
+  .selected-layout.sensor-fullscreen-modal {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, auto) minmax(12rem, 0.45fr);
+    grid-template-areas:
+      "player"
+      "sensor";
+    align-content: center;
+    overflow: auto;
+  }
+
+  .selected-layout.sensor-fullscreen-modal .sensor-panel {
+    max-height: none;
+    margin: 0.75rem 0 0;
+  }
+
+  .selected-layout.sensor-fullscreen-modal #sensorCadenceValue {
+    font-size: clamp(3rem, 18vw, 5rem);
+  }
 }
 
 @media (max-width: 640px) {
@@ -1576,7 +1648,8 @@ a:focus-visible {
   display: none;
 }
 
-.pwa-fullscreen #pwaFullscreenClose {
+.pwa-fullscreen #pwaFullscreenClose,
+.sensor-fullscreen-modal #pwaFullscreenClose {
   display: flex;
   align-items: center;
   justify-content: center;

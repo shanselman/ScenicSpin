@@ -29,6 +29,9 @@ const cadenceMeasurementUuid = '00002a5b-0000-1000-8000-00805f9b34fb';
 const defaultCadenceStalenessLimit = 4;
 const minValidCadenceRpm = 0;
 const maxValidCadenceRpm = 200;
+const debugSensorQueryKeys = ['debugSensor', 'sensorDebug', 'debugCadence'];
+const debugSensorDeviceId = 'debug-cadence-sensor';
+const debugSensorDeviceName = 'Debug cadence sensor';
 const defaultRecommendationId = 'bavarian-countryside-90-minute-4k';
 const maxRecentRoutes = 5;
 const maxRouteOverlayBadges = 4;
@@ -169,7 +172,8 @@ const state = {
   sensorDeviceId: null,
   sensorDeviceName: '',
   sensorCurrentRpm: null,
-  sensorAutoReconnectAttempted: false
+  sensorAutoReconnectAttempted: false,
+  sensorDebugActive: false
 };
 
 const elements = {
@@ -224,10 +228,21 @@ const elements = {
 
 let bluetoothDevice = null;
 let cadenceCharacteristic = null;
+let debugSensorTimer = null;
 const cadenceParser = createCadenceParser(defaultCadenceStalenessLimit);
 
+function isDebugSensorRequested() {
+  if (!isPedalScape) return false;
+  const params = new URLSearchParams(window.location.search);
+  return debugSensorQueryKeys.some((key) => {
+    const value = params.get(key);
+    if (key === 'debugCadence' && Number.isFinite(Number.parseInt(value || '', 10))) return true;
+    return value === '' || value === '1' || value === 'true' || value === 'yes';
+  });
+}
+
 function isSensorConnected() {
-  return Boolean(bluetoothDevice?.gatt?.connected);
+  return state.sensorDebugActive || Boolean(bluetoothDevice?.gatt?.connected);
 }
 
 function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
@@ -534,10 +549,12 @@ function saveSelectedRouteId(routeId) {
 }
 
 function isWebBluetoothSupported() {
+  if (isDebugSensorRequested()) return true;
   return Boolean(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
 }
 
 function canReconnectSavedSensor() {
+  if (isDebugSensorRequested()) return true;
   return Boolean(navigator.bluetooth && typeof navigator.bluetooth.getDevices === 'function');
 }
 
@@ -1338,6 +1355,49 @@ function setSensorStatus(status, detail = '') {
   renderSensorPanel();
 }
 
+function getDebugSensorBaseRpm() {
+  const value = new URLSearchParams(window.location.search).get('debugCadence');
+  const rpm = Number.parseInt(value || '', 10);
+  if (!Number.isFinite(rpm)) return 86;
+  return Math.min(maxValidCadenceRpm, Math.max(minValidCadenceRpm, rpm));
+}
+
+function stopDebugSensor({ keepStatus = false } = {}) {
+  if (debugSensorTimer) {
+    window.clearInterval(debugSensorTimer);
+    debugSensorTimer = null;
+  }
+  if (!state.sensorDebugActive) return;
+  state.sensorDebugActive = false;
+  state.sensorCurrentRpm = null;
+  if (state.sensorDeviceId === debugSensorDeviceId) {
+    state.sensorDeviceId = readStoredSensorDeviceId();
+    state.sensorDeviceName = readStoredSensorDeviceName();
+  }
+  if (!keepStatus) setSensorStatus('disconnected');
+}
+
+function startDebugSensor() {
+  if (!isDebugSensorRequested() || state.sensorDebugActive) return;
+
+  stopDebugSensor({ keepStatus: true });
+  const baseRpm = getDebugSensorBaseRpm();
+  state.sensorDebugActive = true;
+  state.sensorDeviceId = debugSensorDeviceId;
+  state.sensorDeviceName = debugSensorDeviceName;
+  state.sensorCurrentRpm = baseRpm;
+  state.sensorAutoReconnectAttempted = true;
+  setSensorStatus('connected', 'Debug cadence sensor connected.');
+
+  let tick = 0;
+  debugSensorTimer = window.setInterval(() => {
+    tick += 1;
+    const nextRpm = Math.round(baseRpm + Math.sin(tick / 2) * 8 + Math.cos(tick / 5) * 3);
+    state.sensorCurrentRpm = Math.min(maxValidCadenceRpm, Math.max(minValidCadenceRpm, nextRpm));
+    renderSensorPanel();
+  }, 1400);
+}
+
 function getSensorStatusLabel() {
   if (!isPedalScape) return '';
 
@@ -1390,6 +1450,10 @@ function renderSensorPanel() {
     ? t('sensor_cadence_value', { rpm: state.sensorCurrentRpm })
     : t('sensor_cadence_placeholder');
 
+  if (!connected && elements.selectedLayout?.classList.contains('sensor-fullscreen-modal')) {
+    exitPwaFullscreen();
+  }
+
   elements.connectSensorButton.disabled = !supported || busy;
   elements.reconnectSensorButton.disabled = !supported || busy || !canReconnect;
   elements.disconnectSensorButton.disabled = !supported || busy || !connected;
@@ -1402,7 +1466,7 @@ function renderPlayerSensorOverlay() {
   const existingOverlay = elements.playerShell.querySelector('.player-sensor-overlay');
   if (existingOverlay) existingOverlay.remove();
   if (!isPedalScape || !state.selectedRoute) return;
-  if (!bluetoothDevice?.gatt?.connected) return;
+  if (!isSensorConnected()) return;
 
   const overlay = document.createElement('div');
   overlay.className = 'player-sensor-overlay';
@@ -1432,6 +1496,10 @@ function handleCadenceMeasurementChanged(event) {
 async function disconnectSensor(options = {}) {
   const { clearSaved = false, keepStatus = false } = options;
   const previousDevice = bluetoothDevice;
+
+  if (state.sensorDebugActive) {
+    stopDebugSensor({ keepStatus: true });
+  }
 
   if (cadenceCharacteristic) {
     cadenceCharacteristic.removeEventListener('characteristicvaluechanged', handleCadenceMeasurementChanged);
@@ -1502,6 +1570,10 @@ async function connectToSensorDevice(device, { status = 'connecting' } = {}) {
 
 async function connectSensorFromPicker() {
   if (!isPedalScape) return;
+  if (isDebugSensorRequested()) {
+    startDebugSensor();
+    return;
+  }
   if (!isWebBluetoothSupported()) {
     setSensorStatus('unsupported');
     return;
@@ -1530,6 +1602,10 @@ async function connectSensorFromPicker() {
 
 async function reconnectSavedSensor() {
   if (!isPedalScape || !state.sensorDeviceId) return;
+  if (isDebugSensorRequested()) {
+    startDebugSensor();
+    return;
+  }
 
   if (!isWebBluetoothSupported()) {
     setSensorStatus('unsupported');
@@ -1944,13 +2020,17 @@ function selectRoute(routeId, moveToPlayer = false, options = {}) {
 
 function exitPwaFullscreen() {
   elements.selectedLayout?.classList.remove('pwa-fullscreen');
+  elements.selectedLayout?.classList.remove('sensor-fullscreen-modal');
+  elements.selectedLayout?.removeAttribute('role');
+  elements.selectedLayout?.removeAttribute('aria-modal');
   elements.playerShell.classList.remove('pwa-fullscreen');
+  document.body.classList.remove('sensor-fullscreen-open');
   removePwaFullscreenCloseButton();
   updateFullscreenButton();
 }
 
 function createPwaFullscreenCloseButton() {
-  const target = isSensorConnected() ? elements.selectedLayout : elements.playerShell;
+  const target = elements.selectedLayout?.classList.contains('sensor-fullscreen-modal') ? elements.selectedLayout : elements.playerShell;
   if (!target) return;
   let btn = document.querySelector('#pwaFullscreenClose');
   if (btn) return;
@@ -1961,6 +2041,7 @@ function createPwaFullscreenCloseButton() {
   btn.textContent = '\u2715';
   btn.addEventListener('click', exitPwaFullscreen);
   target.appendChild(btn);
+  return btn;
 }
 
 function removePwaFullscreenCloseButton() {
@@ -1969,7 +2050,23 @@ function removePwaFullscreenCloseButton() {
 }
 
 async function requestFullscreen() {
-  const target = isSensorConnected() ? elements.selectedLayout : elements.playerShell;
+  if (isSensorConnected() && elements.selectedLayout) {
+    if (elements.selectedLayout.classList.contains('sensor-fullscreen-modal')) {
+      exitPwaFullscreen();
+      return;
+    }
+
+    elements.selectedLayout.classList.add('sensor-fullscreen-modal');
+    elements.selectedLayout.setAttribute('role', 'dialog');
+    elements.selectedLayout.setAttribute('aria-modal', 'true');
+    document.body.classList.add('sensor-fullscreen-open');
+    const closeButton = createPwaFullscreenCloseButton();
+    updateFullscreenButton();
+    closeButton?.focus({ preventScroll: true });
+    return;
+  }
+
+  const target = elements.playerShell;
   if (!target) return;
 
   if (document.fullscreenElement || document.webkitFullscreenElement) {
@@ -2002,6 +2099,7 @@ function updateFullscreenButton() {
   const isFullscreen = Boolean(
     document.fullscreenElement ||
     document.webkitFullscreenElement ||
+    elements.selectedLayout?.classList.contains('sensor-fullscreen-modal') ||
     elements.selectedLayout?.classList.contains('pwa-fullscreen') ||
     elements.playerShell.classList.contains('pwa-fullscreen')
   );
@@ -2204,6 +2302,11 @@ function bindEvents() {
   });
   document.addEventListener('fullscreenchange', updateFullscreenButton);
   document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && elements.selectedLayout?.classList.contains('sensor-fullscreen-modal')) {
+      exitPwaFullscreen();
+    }
+  });
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
@@ -2350,6 +2453,7 @@ async function init() {
   bindLangSwitcher();
   loadLocalState();
   bindEvents();
+  startDebugSensor();
   renderSensorPanel();
   setupCompactControls();
   if (navigator.onLine === false) setConnectivityStatus(t('offline_ready'));
