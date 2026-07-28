@@ -14,7 +14,7 @@ How to decide who handles what.
 | Testing | Switch | Write tests, find edge cases, verify fixes, device validation |
 | Scope & priorities | Neo | What to build next, trade-offs, decisions |
 | Session logging | Scribe | Automatic — never needs routing |
-| RAI review | Rai | Content safety, bias checks, credential detection, ethical review |
+| Security and RAI review | Rai | Security checks, content safety, bias checks, credential detection, ethical review |
 
 ## Issue Routing
 
