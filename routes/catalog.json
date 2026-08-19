@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "curatedAt": "2026-06-17",
+  "curatedAt": "2026-08-18",
   "curationPolicy": "Link/embed official public streams only. Do not download, proxy, mirror, or rehost creator video files. Re-check embed availability and licensing before launch because platform settings can change.",
   "routes": [
     {
@@ -1002,6 +1002,84 @@
       "embeddingAllowed": true,
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified. Link/embed only; do not download, proxy, mirror, or rehost.",
       "curationNotes": "Aggressively promoted from candidate backlog to maximize visible route depth; this is a very long public platform-hosted scenic bike ride, but because it includes music and comes from a relaxation channel, do an extra pre-launch source/audio/platform check. Link/embed only; do not download or rehost."
+    },
+    {
+      "id": "bavaria-three-alpine-lakes-4k",
+      "title": "Bavaria's Secret Paradise: Cycling Three Alpine Lakes",
+      "sourceUrl": "https://www.youtube.com/watch?v=WBOhVM6uZhs",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/WBOhVM6uZhs",
+      "sourcePlatform": "youtube",
+      "creator": "Virtual Cycling Workouts",
+      "location": "Schliersee, Spitzingsee, and Tegernsee, Bavaria, Germany",
+      "durationMinutes": 88,
+      "difficulty": "moderate",
+      "terrain": "paved lakeside roads, alpine pass climb, and valley descent",
+      "sceneryTags": [
+        "bavaria",
+        "alpine lakes",
+        "mountains",
+        "valley",
+        "summer",
+        "germany"
+      ],
+      "videoQuality": "4K 60fps",
+      "audio": "natural ambient sounds, no music",
+      "cameraStyle": "stabilized and horizon-leveled first-person cycling POV",
+      "embeddingAllowed": true,
+      "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified. Link/embed only; do not download, proxy, mirror, or rehost.",
+      "curationNotes": "Official public YouTube video by Virtual Cycling Workouts, published 2026-08-12; oEmbed and direct metadata resolved on 2026-08-18. The 88-minute route links three Bavarian alpine lakes with a pass climb and stable 4K60 footage."
+    },
+    {
+      "id": "walchensee-loop-bavaria-4k",
+      "title": "Walchensee Loop: Bavaria's Beautiful Lake Cycle Route",
+      "sourceUrl": "https://www.youtube.com/watch?v=rfzZ1RepeB4",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/rfzZ1RepeB4",
+      "sourcePlatform": "youtube",
+      "creator": "Virtual Cycling Workouts",
+      "location": "Lake Walchensee, Bavaria, Germany",
+      "durationMinutes": 83,
+      "difficulty": "moderate",
+      "terrain": "lakeside roads, gravel cycle paths, and a low alpine pass",
+      "sceneryTags": [
+        "bavaria",
+        "lake",
+        "alps",
+        "mountains",
+        "gravel",
+        "germany"
+      ],
+      "videoQuality": "4K 60fps",
+      "audio": "natural sounds including birds, bicycle, and gravel; no narration",
+      "cameraStyle": "stabilized and horizon-leveled first-person cycling POV",
+      "embeddingAllowed": true,
+      "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified. Link/embed only; do not download, proxy, mirror, or rehost.",
+      "curationNotes": "Official public YouTube video by Virtual Cycling Workouts, published 2026-07-20; oEmbed and direct metadata resolved on 2026-08-18. Complete 83-minute circuit of Lake Walchensee designed for steady indoor endurance riding."
+    },
+    {
+      "id": "passo-fedaia-dolomites-climb-4k",
+      "title": "Epic Dolomites Climb to Passo Fedaia",
+      "sourceUrl": "https://www.youtube.com/watch?v=a8vp2fljpuo",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/a8vp2fljpuo",
+      "sourcePlatform": "youtube",
+      "creator": "Virtual Cycling Workouts",
+      "location": "Canazei to Passo Fedaia, Dolomites, Italy",
+      "durationMinutes": 64,
+      "difficulty": "challenging",
+      "terrain": "sustained paved alpine climb to a 2,057-meter mountain pass",
+      "sceneryTags": [
+        "dolomites",
+        "mountain pass",
+        "climb",
+        "lake",
+        "dam",
+        "italy"
+      ],
+      "videoQuality": "4K",
+      "audio": "creator cycling video audio; verify before launch",
+      "cameraStyle": "steady first-person cycling POV at a rhythmic climbing pace",
+      "embeddingAllowed": true,
+      "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified. Link/embed only; do not download, proxy, mirror, or rehost.",
+      "curationNotes": "Official public YouTube video by Virtual Cycling Workouts, published 2026-06-22; oEmbed and direct metadata resolved on 2026-08-18. A sustained 64-minute climb to Passo Fedaia with Marmolada, lake, and hydroelectric dam scenery."
     }
   ]
 }

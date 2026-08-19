@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "curatedAt": "2026-06-18",
+  "curatedAt": "2026-08-18",
   "curationPolicy": "Scenic treadmill and walking pad routes \u2014 real-world walks, nature trails, city streets. Link/embed official public streams only. Do not download, proxy, mirror, or rehost creator video files. Re-check embed availability and licensing before launch because platform settings can change.",
   "routes": [
     {
@@ -680,6 +680,90 @@
       "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
       "curationNotes": "Official public YouTube video by ExciteHike; oEmbed resolved on 2026-06-18. Over 3 hours of rainforest trail walking ending at scenic Black Hole Falls. Pure nature immersion.",
       "thumbnail": "https://img.youtube.com/vi/BaingE6BZ10/maxresdefault.jpg"
+    },
+    {
+      "id": "limone-sul-garda-italy-walk-4k",
+      "title": "Limone sul Garda: Lakefront and Lemon Town Walking Tour",
+      "sourceUrl": "https://www.youtube.com/watch?v=GbplxQa8UCs",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/GbplxQa8UCs",
+      "sourcePlatform": "youtube",
+      "creator": "Prowalk Tours",
+      "location": "Limone sul Garda, Lombardy, Italy",
+      "durationMinutes": 99,
+      "difficulty": "moderate",
+      "terrain": "lakefront promenade, stone old-town streets, stairs, and hillside lanes",
+      "sceneryTags": [
+        "lake garda",
+        "italy",
+        "lakefront",
+        "historic town",
+        "mountains",
+        "architecture",
+        "lemon gardens"
+      ],
+      "videoQuality": "4K HDR",
+      "audio": "natural ambient town and lakefront sounds, no narration",
+      "cameraStyle": "first-person POV walking tour with optional historical captions",
+      "embeddingAllowed": true,
+      "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
+      "curationNotes": "Official public YouTube video by Prowalk Tours, published 2026-07-25; oEmbed and direct metadata resolved on 2026-08-18. A 3.2 km walk through the old port, upper town, lemon gardens, and Lake Garda promenade.",
+      "thumbnail": "https://img.youtube.com/vi/GbplxQa8UCs/maxresdefault.jpg"
+    },
+    {
+      "id": "otranto-puglia-italy-walk-4k",
+      "title": "Otranto: Old Town and Turquoise Sea Walking Tour",
+      "sourceUrl": "https://www.youtube.com/watch?v=QMe441s-s4Q",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/QMe441s-s4Q",
+      "sourcePlatform": "youtube",
+      "creator": "Prowalk Tours",
+      "location": "Otranto, Puglia, Italy",
+      "durationMinutes": 108,
+      "difficulty": "easy",
+      "terrain": "paved waterfront, beach promenades, and old-town stone streets",
+      "sceneryTags": [
+        "puglia",
+        "italy",
+        "coast",
+        "beach",
+        "historic town",
+        "castle",
+        "turquoise water"
+      ],
+      "videoQuality": "4K",
+      "audio": "natural ambient town and seaside sounds, no narration",
+      "cameraStyle": "first-person POV walking tour with optional historical captions",
+      "embeddingAllowed": true,
+      "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
+      "curationNotes": "Official public YouTube video by Prowalk Tours, published 2026-08-15; oEmbed and direct metadata resolved on 2026-08-18. A 5 km coastal route through beaches, the walled old town, cathedral, Aragonese Castle, and waterfront market.",
+      "thumbnail": "https://img.youtube.com/vi/QMe441s-s4Q/maxresdefault.jpg"
+    },
+    {
+      "id": "sirmione-lake-garda-italy-walk-4k",
+      "title": "Sirmione: Lake Garda Peninsula Walking Tour",
+      "sourceUrl": "https://www.youtube.com/watch?v=74gEAesaNiE",
+      "embedUrl": "https://www.youtube-nocookie.com/embed/74gEAesaNiE",
+      "sourcePlatform": "youtube",
+      "creator": "Prowalk Tours",
+      "location": "Sirmione, Lake Garda, Lombardy, Italy",
+      "durationMinutes": 190,
+      "difficulty": "moderate",
+      "terrain": "stone old-town streets, lakefront promenades, beaches, olive-grove paths, and castle stairs",
+      "sceneryTags": [
+        "lake garda",
+        "italy",
+        "historic town",
+        "castle",
+        "roman ruins",
+        "beaches",
+        "lakefront"
+      ],
+      "videoQuality": "4K",
+      "audio": "natural ambient town and lakefront sounds, no narration",
+      "cameraStyle": "first-person POV walking tour with optional historical captions",
+      "embeddingAllowed": true,
+      "license": "Platform-hosted public stream; reuse governed by YouTube terms. Specific license not independently verified.",
+      "curationNotes": "Official public YouTube video by Prowalk Tours, published 2026-08-08; oEmbed and direct metadata resolved on 2026-08-18. A complete 8.9 km peninsula walk through Sirmione's old town, beaches, Roman villa, olive groves, and Scaligero Castle.",
+      "thumbnail": "https://img.youtube.com/vi/74gEAesaNiE/maxresdefault.jpg"
     }
   ]
 }

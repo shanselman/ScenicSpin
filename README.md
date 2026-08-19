@@ -29,7 +29,7 @@ ScenicSpin ships as two independent, white‑labeled sites built from the same t
 | **Device** | Any bike + screen | Any treadmill + screen |
 | **Accent color** | `#38e8a4` 🟢 | `#4d9de0` 🔵 |
 | **Tagline** | *Any bike. Any screen. Beautiful rides from home.* | *Any treadmill. Any screen. Beautiful walks from home.* |
-| **Routes** | ~40 curated rides | ~24 curated walks |
+| **Routes** | 43 curated rides | 27 curated walks |
 | **Config** | [`sites/pedalscape.config.json`](sites/pedalscape.config.json) | [`sites/beltscape.config.json`](sites/beltscape.config.json) |
 | **Catalog** | [`routes/catalog.json`](routes/catalog.json) | [`routes/beltscape-catalog.json`](routes/beltscape-catalog.json) |
 
