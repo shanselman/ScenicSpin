@@ -131,11 +131,21 @@ jobs:
 
       - name: Deploy to ${{ matrix.repository }}
         env:
-          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          PEDALSCAPE_STAGING_DEPLOY_KEY: ${{ secrets.PEDALSCAPE_STAGING_DEPLOY_KEY }}
+          BELTSCAPE_STAGING_DEPLOY_KEY: ${{ secrets.BELTSCAPE_STAGING_DEPLOY_KEY }}
           SITE: ${{ matrix.site }}
           TARGET_REPOSITORY: ${{ matrix.repository }}
           SOURCE_SHA: ${{ github.sha }}
         run: |
+          mkdir -p ~/.ssh
+          if [ "${SITE}" = "pedalscape" ]; then
+            printf '%s\n' "${PEDALSCAPE_STAGING_DEPLOY_KEY}" > ~/.ssh/id_ed25519
+          else
+            printf '%s\n' "${BELTSCAPE_STAGING_DEPLOY_KEY}" > ~/.ssh/id_ed25519
+          fi
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
           cd "dist/${SITE}"
           git init -b main
           git config user.name "github-actions[bot]"
@@ -143,5 +153,5 @@ jobs:
           git add .
           git commit -m "Deploy ${SITE} staging from ${SOURCE_SHA}"
           git push --force \
-            "https://x-access-token:${DEPLOY_TOKEN}@github.com/shanselman/${TARGET_REPOSITORY}.git" \
+            "git@github.com:shanselman/${TARGET_REPOSITORY}.git" \
             HEAD:main
