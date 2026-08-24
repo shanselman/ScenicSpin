@@ -1,0 +1,147 @@
+name: Build, Test, and Deploy Staging
+
+on:
+  push:
+    branches:
+      - feature/heart-rate-zones-testing
+  workflow_dispatch:
+
+concurrency:
+  group: scenicspin-staging
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        site: [pedalscape, beltscape]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Check source and data
+        run: npm run check
+
+      - name: Run unit tests
+        run: npm run test:unit --if-present
+
+      - name: Build ${{ matrix.site }}
+        run: node scripts/build.js ${{ matrix.site }}
+
+      - name: Test ${{ matrix.site }}
+        run: SITE=${{ matrix.site }} npx playwright test
+        env:
+          CI: true
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-playwright-report-${{ matrix.site }}
+          path: playwright-report/
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - site: pedalscape
+            repository: pedalscape-staging
+          - site: beltscape
+            repository: beltscape-staging
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build ${{ matrix.site }}
+        run: node scripts/build.js ${{ matrix.site }}
+
+      - name: Prepare staging-only output
+        env:
+          SITE: ${{ matrix.site }}
+          SOURCE_BRANCH: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ github.sha }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+        run: |
+          rm -f "dist/${SITE}/CNAME"
+          python3 - <<'PY'
+          import html
+          import json
+          import os
+          from pathlib import Path
+
+          output = Path("dist") / os.environ["SITE"]
+          index_path = output / "index.html"
+          index = index_path.read_text(encoding="utf-8")
+          robots = '<meta name="robots" content="noindex, nofollow, noarchive">'
+          if robots not in index:
+              index = index.replace("</head>", f"  {robots}\n</head>", 1)
+
+          branch = html.escape(os.environ["SOURCE_BRANCH"])
+          short_sha = html.escape(os.environ["SOURCE_SHA"][:7])
+          banner = (
+              '<div role="status" style="position:relative;z-index:9999;'
+              'padding:.45rem 1rem;text-align:center;background:#ffd166;'
+              'color:#17120a;font:700 .875rem/1.3 system-ui,sans-serif">'
+              f'Staging preview · {branch} · {short_sha}</div>'
+          )
+          index = index.replace("<body>", f"<body>\n  {banner}", 1)
+          index_path.write_text(index, encoding="utf-8")
+
+          metadata = {
+              "staging": True,
+              "site": os.environ["SITE"],
+              "sourceRepository": os.environ["SOURCE_REPOSITORY"],
+              "sourceBranch": os.environ["SOURCE_BRANCH"],
+              "sourceCommit": os.environ["SOURCE_SHA"],
+          }
+          (output / "staging-build.json").write_text(
+              json.dumps(metadata, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
+
+      - name: Deploy to ${{ matrix.repository }}
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          SITE: ${{ matrix.site }}
+          TARGET_REPOSITORY: ${{ matrix.repository }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          cd "dist/${SITE}"
+          git init -b main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy ${SITE} staging from ${SOURCE_SHA}"
+          git push --force \
+            "https://x-access-token:${DEPLOY_TOKEN}@github.com/shanselman/${TARGET_REPOSITORY}.git" \
+            HEAD:main
