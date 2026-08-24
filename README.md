@@ -46,6 +46,7 @@ ScenicSpin ships as two independent, white‑labeled sites built from the same t
 - **7 languages** — English, Spanish, French, Italian, Turkish, Traditional Chinese, and Simplified Chinese, with runtime `{{token}}` substitution.
 - **Filter & search** — Browse routes by scenery, terrain, difficulty, and duration.
 - **Bluetooth cadence (PedalScape)** — Pair a CSC cadence sensor, reconnect to the saved device, and see live RPM while riding.
+- **Bluetooth heart rate (both sites)** — Pair a standard BLE heart-rate monitor, view live BPM, and optionally show five textual zones from a maximum heart rate you enter yourself. PedalScape can keep cadence and heart rate connected together.
 
 ---
 
@@ -81,7 +82,10 @@ ScenicSpin/
 ├── service-worker.js          # Service worker template (offline shell, cache busting)
 ├── src/
 │   ├── app.js                 # Main app logic (catalog, player, favorites, i18n, filters)
+│   ├── heart-rate.js          # Pure standard-HRS parser and zone classifier
 │   └── styles.css             # Styles (accent color driven by tokens)
+├── data/
+│   └── heart-rate-monitors.json # Shared optional monitor examples
 ├── locales/                   # i18n source files (~164 keys each)
 │   ├── en.json                #   English (source of truth)
 │   ├── es.json  fr.json
@@ -103,7 +107,8 @@ ScenicSpin/
 │   ├── build.js               # The build script (zero npm deps, pure Node)
 │   └── generate-og-image.ps1  # OG image generator
 ├── tests/
-│   ├── pwa-local.spec.js      # Catalog, player, favorites behavior
+│   ├── heart-rate-helpers.test.js # Pure parser and zone-boundary tests
+│   ├── pwa-local.spec.js      # Catalog, player, local data, and sensor behavior
 │   └── pwa-offline.spec.js    # Service worker / offline shell
 ├── playwright.config.js       # Test runner (reads SITE env to pick config)
 ├── .github/workflows/
@@ -140,7 +145,7 @@ npm run preview:beltscape             # serves dist/beltscape at http://127.0.0.
 
 > ⚠️ **Always preview the built `dist/` output, not the repo root.** The root files contain raw `{{TOKENS}}` and won't render correctly until the build substitutes them.
 
-> ℹ️ **Bluetooth note:** Cadence sensor support uses the Web Bluetooth API and currently ships for **PedalScape** only. Browser/device support varies; unsupported browsers still run the full route catalog and player experience.
+> ℹ️ **Bluetooth note:** Cadence sensor support uses Web Bluetooth and remains **PedalScape-only**. Standard BLE heart-rate monitors work on both generated sites in supported Chrome/Edge desktop and Android browsers. Native iPhone/iPad browsers and installed iOS/iPadOS PWAs do not currently support Web Bluetooth; unsupported browsers still run the full route catalog and player.
 
 ### Handy scripts
 
@@ -152,6 +157,7 @@ npm run preview:beltscape             # serves dist/beltscape at http://127.0.0.
 | `npm run preview:pedalscape` | Static‑serve PedalScape on port `5173` |
 | `npm run preview:beltscape` | Static‑serve BeltScape on port `5174` |
 | `npm run check` | Syntax-check app/scripts and validate catalogs/locales |
+| `npm run test:unit` | Test the heart-rate parser and zone boundaries |
 | `npm run test:pedalscape` | Build + run Playwright tests for PedalScape |
 | `npm run test:beltscape` | Build + run Playwright tests for BeltScape |
 | `npm run test:all` | Test both sites |
@@ -268,15 +274,15 @@ What it does, in order:
 
 1. **Loads** `sites/<slug>.config.json`.
 2. **Cleans** `dist/<slug>/`.
-3. **Token‑substitutes** the template files — `index.html`, `manifest.webmanifest`, `service-worker.js`, `src/styles.css`, `src/app.js` — replacing placeholders like `{{SITE_NAME}}`, `{{ACCENT_COLOR}}`, `{{SHELL_VERSION}}`, `{{CACHE_NAME}}`, `{{ACTIVITY_NOUN}}`, and more.
-4. **Copies** the site's icon set (`icons/<slug>/` → `dist/<slug>/icons/`) and shared `assets/`.
+3. **Token-substitutes** the template files — `index.html`, `manifest.webmanifest`, `service-worker.js`, `src/styles.css`, `src/heart-rate.js`, `src/app.js` — replacing placeholders like `{{SITE_NAME}}`, `{{ACCENT_COLOR}}`, `{{SHELL_VERSION}}`, `{{CACHE_NAME}}`, `{{ACTIVITY_NOUN}}`, and more.
+4. **Copies** the site's icon set (`icons/<slug>/` → `dist/<slug>/icons/`), shared `assets/`, and shared `data/`.
 5. **Localizes** every file in `locales/` (brand overwrite + activity fallbacks + per‑language overrides).
 6. **Copies the catalog** — the site's catalog is always emitted as `routes/catalog.json` so `app.js` is site‑agnostic — plus `candidate-backlog.json`.
 7. **Writes** a `CNAME` (the site domain) and a merged `manifest.webmanifest` (with site categories).
 
 ### Cache busting
 
-The service worker cache is named by `cacheName` (e.g. `pedalscape-shell-v7`), derived from `shellVersion`. **Bump `shellVersion` in the site config whenever you ship shell changes** — it changes the cache name, so returning visitors fetch the fresh shell instead of a stale cached one.
+The service worker cache is named by `cacheName` (for example, `pedalscape-shell-v14`), derived from `shellVersion`. **Bump `shellVersion` in the site config whenever you ship shell changes** — it changes the cache name, so returning visitors fetch the fresh shell instead of a stale cached one.
 
 ### A few key tokens
 
@@ -300,13 +306,14 @@ End‑to‑end tests run in **Playwright** (Chromium). The runner reads the `SIT
 ```bash
 npm run test:pedalscape     # build + test PedalScape
 npm run test:beltscape      # build + test BeltScape
-npm run test:all            # both
+npm run test:unit           # pure heart-rate parser and zones
+npm run test:all            # unit tests plus both generated sites
 
 # Or directly against an already-built site:
 SITE=beltscape npx playwright test
 ```
 
-Coverage includes catalog loading and result counts, the full‑screen player, favorites, and the offline service‑worker shell.
+Coverage includes catalog loading, the full-screen player, favorites, local backup/reset, the offline service-worker shell, heart-rate parsing and zones, independent cadence/heart-rate lifecycles, debug simulation, locale parity, and affiliate-link contracts.
 
 ---
 

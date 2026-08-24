@@ -95,6 +95,7 @@ const templateFiles = [
   'manifest.webmanifest',
   'service-worker.js',
   'src/styles.css',
+  'src/heart-rate.js',
   'src/app.js',
 ];
 
@@ -119,6 +120,9 @@ console.log(`  ✓ icons/ (from ${config.iconsFolder})`);
 // Copy assets (og-image etc)
 copyDir('assets', path.join(outDir, 'assets'));
 console.log(`  ✓ assets/`);
+
+copyDir('data', path.join(outDir, 'data'));
+console.log(`  ✓ data/`);
 
 // Copy routes — catalog + candidate-backlog
 fs.mkdirSync(path.join(outDir, 'routes'), { recursive: true });

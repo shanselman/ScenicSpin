@@ -21,6 +21,121 @@ async function loadCatalogStatus(page) {
   await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN_S}s?$`));
 }
 
+async function installBluetoothSensorMocks(page) {
+  await page.addInitScript(() => {
+    const cadenceServiceUuid = '00001816-0000-1000-8000-00805f9b34fb';
+    const cadenceMeasurementUuid = '00002a5b-0000-1000-8000-00805f9b34fb';
+    const heartRateServiceUuid = '0000180d-0000-1000-8000-00805f9b34fb';
+    const heartRateMeasurementUuid = '00002a37-0000-1000-8000-00805f9b34fb';
+
+    function createCharacteristic(name, uuid) {
+      const listeners = new Map();
+      const characteristic = {
+        startNotifications: () => {
+          window.__bluetoothEvents.push(`${name}:startNotifications`);
+          return Promise.resolve(characteristic);
+        },
+        stopNotifications: () => {
+          window.__bluetoothEvents.push(`${name}:stopNotifications`);
+          return Promise.resolve();
+        },
+        addEventListener: (type, listener) => listeners.set(type, listener),
+        removeEventListener: (type) => listeners.delete(type),
+        emit(bytes) {
+          const listener = listeners.get('characteristicvaluechanged');
+          if (!listener) return;
+          const buffer = Uint8Array.from(bytes).buffer;
+          listener({ target: { value: new DataView(buffer) } });
+        },
+        uuid
+      };
+      return characteristic;
+    }
+
+    function createDevice({ id, name, serviceUuid, measurementUuid, type }) {
+      const deviceListeners = new Map();
+      const characteristic = createCharacteristic(type, measurementUuid);
+      const service = {
+        getCharacteristic(uuid) {
+          window.__bluetoothEvents.push(`${type}:getCharacteristic:${uuid}`);
+          if (uuid !== measurementUuid) return Promise.reject(new Error(`Unexpected characteristic ${uuid}`));
+          return Promise.resolve(characteristic);
+        }
+      };
+      const device = {
+        id,
+        name,
+        gatt: {
+          connected: false,
+          connect() {
+            window.__bluetoothEvents.push(`${type}:connect`);
+            this.connected = true;
+            return Promise.resolve({
+              getPrimaryService(uuid) {
+                window.__bluetoothEvents.push(`${type}:getPrimaryService:${uuid}`);
+                if (uuid !== serviceUuid) return Promise.reject(new Error(`Unexpected service ${uuid}`));
+                return Promise.resolve(service);
+              }
+            });
+          },
+          disconnect() {
+            window.__bluetoothEvents.push(`${type}:disconnect`);
+            this.connected = false;
+          }
+        },
+        addEventListener(type, listener) {
+          deviceListeners.set(type, listener);
+        },
+        removeEventListener(type) {
+          deviceListeners.delete(type);
+        },
+        simulateUnexpectedDisconnect() {
+          this.gatt.connected = false;
+          deviceListeners.get('gattserverdisconnected')?.();
+        }
+      };
+      return { characteristic, device };
+    }
+
+    const cadence = createDevice({
+      id: 'mock-cadence-device',
+      name: 'Mock Cadence Sensor',
+      serviceUuid: cadenceServiceUuid,
+      measurementUuid: cadenceMeasurementUuid,
+      type: 'cadence'
+    });
+    const heartRate = createDevice({
+      id: 'mock-heart-rate-device',
+      name: 'Mock Heart Rate Monitor',
+      serviceUuid: heartRateServiceUuid,
+      measurementUuid: heartRateMeasurementUuid,
+      type: 'heartRate'
+    });
+
+    window.__bluetoothEvents = [];
+    window.__emitCadencePacket = (bytes) => cadence.characteristic.emit(bytes);
+    window.__emitHeartRatePacket = (bytes) => heartRate.characteristic.emit(bytes);
+    window.__disconnectHeartRateDevice = () => heartRate.device.simulateUnexpectedDisconnect();
+    window.__mockSensorConnections = () => ({
+      cadence: cadence.device.gatt.connected,
+      heartRate: heartRate.device.gatt.connected
+    });
+
+    Object.defineProperty(navigator, 'bluetooth', {
+      configurable: true,
+      value: {
+        requestDevice(options) {
+          const services = options?.filters?.flatMap((filter) => filter.services || []) || [];
+          if (services.includes(cadenceServiceUuid)) return Promise.resolve(cadence.device);
+          if (services.includes(heartRateServiceUuid)) return Promise.resolve(heartRate.device);
+          return Promise.reject(new Error('Unexpected Bluetooth service filter'));
+        },
+        getDevices: () => Promise.resolve([cadence.device, heartRate.device])
+      }
+    });
+  });
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     if (window.name !== 'e2e-local-state-cleared') {
@@ -64,6 +179,8 @@ test('loads the production JSON route catalog and exposes PWA assets', async ({ 
   const serviceWorkerText = await serviceWorker.text();
   expect(serviceWorkerText).toContain('./routes/catalog.json');
   expect(serviceWorkerText).toContain('./routes/candidate-backlog.json');
+  expect(serviceWorkerText).toContain('./data/heart-rate-monitors.json');
+  expect(serviceWorkerText).toContain('./src/heart-rate.js');
   expect(serviceWorkerText).toContain("event.data?.type === 'SKIP_WAITING'");
   expect(serviceWorkerText).not.toContain('self.skipWaiting();\n});\n\nself.addEventListener(\'activate\'');
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute('href', 'manifest.webmanifest');
@@ -212,17 +329,302 @@ test('PedalScape can simulate a cadence sensor from a debug URL flag', async ({ 
   await expect(page.locator('.selected-layout')).toHaveClass(/sensor-fullscreen-modal/);
   await expect(page.locator('.selected-layout')).toHaveAttribute('role', 'dialog');
   await expect(page.locator('.selected-layout')).toHaveAttribute('aria-modal', 'true');
+  await expect(page.locator('.selected-layout')).toHaveAttribute('aria-labelledby', 'sensorPanelTitle');
   await expect(page.locator('body')).toHaveClass(/sensor-fullscreen-open/);
   await expect(page.locator('#pwaFullscreenClose')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#playerShell iframe')).toBeFocused();
 
   await page.locator('#pwaFullscreenClose').click();
   await expect(page.locator('.selected-layout')).not.toHaveClass(/sensor-fullscreen-modal/);
   await expect(page.locator('body')).not.toHaveClass(/sensor-fullscreen-open/);
+  await expect(page.locator('#fullscreenButton')).toBeFocused();
 
   await page.locator('#fullscreenButton').click();
   await expect(page.locator('.selected-layout')).toHaveClass(/sensor-fullscreen-modal/);
   await page.keyboard.press('Escape');
   await expect(page.locator('.selected-layout')).not.toHaveClass(/sensor-fullscreen-modal/);
+});
+
+test('heart-rate connect, update, disconnect, reconnect, and forget lifecycle stays local', async ({ page }) => {
+  await installBluetoothSensorMocks(page);
+  await loadCatalog(page);
+
+  await expect(page.locator('#heartRateSensorCard')).toBeVisible();
+  await expect(page.locator('#heartRateZoneValue')).toHaveText('Set a maximum to show zones');
+  await page.locator('#connectHeartRateButton').click();
+  await expect(page.locator('#heartRateConnectionStatus')).toContainText('Connected to Mock Heart Rate Monitor.');
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateDeviceId')))
+    .toBe('mock-heart-rate-device');
+
+  const setupEvents = await page.evaluate(() => window.__bluetoothEvents.filter((event) => event.startsWith('heartRate:')));
+  expect(setupEvents.slice(0, 4)).toEqual([
+    'heartRate:connect',
+    'heartRate:getPrimaryService:0000180d-0000-1000-8000-00805f9b34fb',
+    'heartRate:getCharacteristic:00002a37-0000-1000-8000-00805f9b34fb',
+    'heartRate:startNotifications'
+  ]);
+
+  await page.evaluate(() => window.__emitHeartRatePacket([0x00, 146]));
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('146 bpm');
+  await expect(page.locator('#heartRateZoneValue')).toHaveText('Set a maximum to show zones');
+
+  await page.evaluate(() => window.__emitHeartRatePacket([0x01, 0x92]));
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('146 bpm');
+
+  await page.locator('#heartRateMaxInput').fill('200');
+  await page.locator('#saveHeartRateMaxButton').click();
+  await expect(page.locator('#heartRateMaxStatus')).toHaveText('Maximum saved locally.');
+  await expect(page.locator('#heartRateZoneValue')).toHaveText('Zone 3 · 73%');
+  await expect(page.locator('.heart-rate-zone-reading')).toHaveAttribute('data-zone', 'zone3');
+  const liveBackup = await page.evaluate(() => {
+    document.querySelector('#copyDataButton').click();
+    return JSON.parse(document.querySelector('#backupJsonOutput').value);
+  });
+  expect(liveBackup.localData).toMatchObject({
+    heartRateDeviceId: 'mock-heart-rate-device',
+    heartRateDeviceName: 'Mock Heart Rate Monitor',
+    heartRateMaximum: 200,
+    heartRateZonePreferences: { showZones: true }
+  });
+  expect(JSON.stringify(liveBackup.localData)).not.toMatch(/currentBpm|measurement|history|146/);
+
+  await page.locator('#disconnectHeartRateButton').click();
+  await expect(page.locator('#heartRateConnectionStatus')).toHaveText('Heart-rate monitor disconnected.');
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('-- bpm');
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateDeviceId'))).toBe('mock-heart-rate-device');
+
+  await page.locator('#reconnectHeartRateButton').click();
+  await expect(page.locator('#heartRateConnectionStatus')).toContainText('Connected to Mock Heart Rate Monitor.');
+  await page.evaluate(() => window.__emitHeartRatePacket([0x01, 0xc8, 0x00]));
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('200 bpm');
+  await expect(page.locator('#heartRateZoneValue')).toHaveText('Zone 5 · 100%');
+
+  await page.evaluate(() => window.__disconnectHeartRateDevice());
+  await expect(page.locator('#heartRateConnectionStatus')).toHaveText('Heart-rate monitor disconnected.');
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('-- bpm');
+
+  await page.locator('#reconnectHeartRateButton').click();
+  await expect(page.locator('#heartRateConnectionStatus')).toContainText('Connected');
+  await page.locator('#forgetHeartRateButton').click();
+  await expect(page.locator('#heartRateSavedDevice')).toHaveText('None');
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('-- bpm');
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateDeviceId'))).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateMaximum'))).toBe('200');
+});
+
+test('optional monitor recommendations never block the route catalog', async ({ page }) => {
+  let releaseRecommendations;
+  await page.route('**/data/heart-rate-monitors.json', (route) => new Promise((resolve) => {
+    releaseRecommendations = async () => {
+      await route.fulfill({ json: { schemaVersion: 1, products: [] } });
+      resolve();
+    };
+  }));
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('.route-card').first()).toBeVisible();
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN_S}s?$`));
+  await expect.poll(() => Boolean(releaseRecommendations)).toBeTruthy();
+  await releaseRecommendations();
+});
+
+test('PedalScape keeps cadence and heart-rate sessions independent', async ({ page }) => {
+  test.skip(!IS_PEDALSCAPE, 'Simultaneous cadence and heart rate is a PedalScape feature.');
+  await installBluetoothSensorMocks(page);
+  await loadCatalog(page);
+
+  await page.locator('#connectSensorButton').click();
+  await expect(page.locator('#sensorConnectionStatus')).toContainText('Connected');
+  await page.evaluate(() => window.__emitCadencePacket([0x02, 0x00, 0x00, 0x00, 0x00]));
+  await page.evaluate(() => window.__emitCadencePacket([0x02, 0x01, 0x00, 0x00, 0x04]));
+  await expect(page.locator('#sensorCadenceValue')).toHaveText('60 rpm');
+
+  await page.locator('#connectHeartRateButton').click();
+  await page.evaluate(() => window.__emitHeartRatePacket([0x00, 146]));
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('146 bpm');
+  await expect(page.locator('#sensorCadenceValue')).toHaveText('60 rpm');
+  expect(await page.evaluate(() => window.__mockSensorConnections())).toEqual({
+    cadence: true,
+    heartRate: true
+  });
+  await expect(page.locator('.player-sensor-overlay')).toContainText('60 rpm · 146 bpm');
+
+  await page.locator('#forgetSensorButton').click();
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('146 bpm');
+  await expect(page.locator('#heartRateConnectionStatus')).toContainText('Connected');
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateDeviceId'))).toBe('mock-heart-rate-device');
+  expect(await page.evaluate(() => window.__mockSensorConnections())).toEqual({
+    cadence: false,
+    heartRate: true
+  });
+
+  await page.locator('#connectSensorButton').click();
+  await page.evaluate(() => window.__emitCadencePacket([0x02, 0x00, 0x00, 0x00, 0x00]));
+  await page.evaluate(() => window.__emitCadencePacket([0x02, 0x01, 0x00, 0x00, 0x04]));
+  await expect(page.locator('#sensorCadenceValue')).toHaveText('60 rpm');
+  await page.locator('#forgetHeartRateButton').click();
+  await expect(page.locator('#sensorCadenceValue')).toHaveText('60 rpm');
+  await expect(page.locator('#sensorConnectionStatus')).toContainText('Connected');
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.sensorDeviceId'))).toBe('mock-cadence-device');
+  expect(await page.evaluate(() => window.__mockSensorConnections())).toEqual({
+    cadence: true,
+    heartRate: false
+  });
+});
+
+test('BeltScape exposes heart rate while cadence remains absent', async ({ page }) => {
+  test.skip(IS_PEDALSCAPE, 'BeltScape-only sensor surface assertion.');
+  await installBluetoothSensorMocks(page);
+  await loadCatalog(page);
+
+  await expect(page.locator('#sensorPanel')).toBeVisible();
+  await expect(page.locator('#heartRateSensorCard')).toBeVisible();
+  await expect(page.locator('#cadenceSensorCard')).toBeHidden();
+  await expect(page.locator('#connectSensorButton')).toBeHidden();
+
+  await page.locator('#connectHeartRateButton').click();
+  await page.evaluate(() => window.__emitHeartRatePacket([0x00, 132]));
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('132 bpm');
+  await expect(page.locator('.player-sensor-overlay')).toContainText('132 bpm');
+  expect(await page.evaluate(() => window.__mockSensorConnections())).toEqual({
+    cadence: false,
+    heartRate: true
+  });
+});
+
+test('stale heart-rate readings clear without disconnecting the monitor', async ({ page }) => {
+  await page.clock.install();
+  await installBluetoothSensorMocks(page);
+  await loadCatalog(page);
+  await page.locator('#connectHeartRateButton').click();
+  await page.evaluate(() => window.__emitHeartRatePacket([0x00, 144]));
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('144 bpm');
+
+  await page.clock.fastForward(8001);
+  await expect(page.locator('#heartRateBpmValue')).toHaveText('-- bpm');
+  await expect(page.locator('#heartRateConnectionStatus')).toContainText('Connected');
+});
+
+test('debug heart-rate simulation works on the generated site with textual zones', async ({ page }) => {
+  await page.goto('/?debugHeartRate=150', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN_S}s?$`));
+  await expect(page.locator('#heartRateConnectionStatus')).toHaveText('Debug heart-rate monitor connected.');
+  await expect(page.locator('#heartRateSavedDevice')).toHaveText('Debug heart-rate monitor');
+  await expect(page.locator('#heartRateBpmValue')).toHaveText(/\d+ bpm/);
+
+  await page.locator('#heartRateMaxInput').fill('200');
+  await page.locator('#heartRateMaxInput').press('Enter');
+  await expect(page.locator('#heartRateZoneValue')).toContainText('Zone 3');
+  await expect(page.locator('.heart-rate-zone-reading')).toHaveAttribute('data-zone', 'zone3');
+  await expect(page.locator('.player-sensor-overlay')).toContainText(/bpm · Zone 3/);
+
+  await page.locator('#fullscreenButton').click();
+  await expect(page.locator('.selected-layout')).toHaveAttribute('role', 'dialog');
+  await expect(page.locator('.selected-layout')).toHaveAttribute('aria-labelledby', 'sensorPanelTitle');
+  await expect(page.locator('#pwaFullscreenClose')).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#playerShell iframe')).toBeFocused();
+  await page.locator('#pwaFullscreenClose').click();
+  await expect(page.locator('#fullscreenButton')).toBeFocused();
+
+  if (IS_PEDALSCAPE) {
+    await expect(page.locator('#cadenceSensorCard')).toBeVisible();
+  } else {
+    await expect(page.locator('#cadenceSensorCard')).toBeHidden();
+  }
+});
+
+test('optional monitor recommendations use exact disclosed affiliate links without prices', async ({ page, request }) => {
+  const response = await request.get('/data/heart-rate-monitors.json');
+  expect(response.ok()).toBeTruthy();
+  const data = await response.json();
+  const expectedProducts = [
+    ['CooSpo H808S', 'B0FCY41J5N'],
+    ['Polar H9', 'B08GHH4ZKL'],
+    ['Polar H10', 'B0F69ZP1D8'],
+    ['Polar Verity Sense', 'B0F1HY5HGT']
+  ];
+  expect(data.products.map(({ name, asin }) => [name, asin])).toEqual(expectedProducts);
+
+  await loadCatalog(page);
+  await page.locator('.heart-rate-help summary').click();
+  const disclosure = (await page.locator('.affiliate-disclosure').textContent()).trim();
+  expect(disclosure.startsWith('As an Amazon Associate I earn from qualifying purchases.')).toBeTruthy();
+  expect(disclosure).toContain('paid affiliate links');
+  expect(disclosure).toContain('monitor is optional');
+
+  const links = page.locator('#heartRateProductList a');
+  await expect(links).toHaveCount(4);
+  for (let index = 0; index < expectedProducts.length; index += 1) {
+    const [name, asin] = expectedProducts[index];
+    const link = links.nth(index);
+    const expectedUrl = `https://www.amazon.com/dp/${asin}?tag=diabeticbooks`;
+    await expect(link).toContainText(name);
+    await expect(link).toHaveAttribute('href', expectedUrl);
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'sponsored nofollow noopener');
+    const url = new URL(await link.getAttribute('href'));
+    expect([...url.searchParams.entries()]).toEqual([['tag', 'diabeticbooks']]);
+  }
+  await expect(page.locator('a:not([href*="amazon.com"])[href*="diabeticbooks"]')).toHaveCount(0);
+  await expect(page.locator('.heart-rate-recommendations')).not.toContainText(/\$\d|price/i);
+});
+
+test('all generated locales retain key parity for heart-rate content', async ({ request }) => {
+  const localeNames = ['en', 'es', 'fr', 'it', 'tr', 'zh-TW', 'zh-CN'];
+  const locales = [];
+  for (const localeName of localeNames) {
+    const response = await request.get(`/locales/${localeName}.json`);
+    expect(response.ok()).toBeTruthy();
+    locales.push(await response.json());
+  }
+
+  const englishKeys = Object.keys(locales[0]).sort();
+  for (const locale of locales) {
+    expect(Object.keys(locale).sort()).toEqual(englishKeys);
+    expect(locale.heart_rate_title).toBeTruthy();
+    expect(locale.heart_rate_help_heartcast).toContain('HeartCast');
+    expect(locale.heart_rate_product_h10_connection).toBeTruthy();
+  }
+});
+
+test('heart-rate controls expose keyboard labels and textual non-color status', async ({ page }) => {
+  await loadCatalog(page);
+
+  await expect(page.getByLabel('Known maximum heart rate (optional)')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Connect monitor' })).toBeVisible();
+  await expect(page.locator('#heartRateConnectionStatus')).toHaveAttribute('aria-live', 'polite');
+  await expect(page.locator('#heartRateBpmValue')).not.toHaveAttribute('aria-live');
+
+  await page.locator('#heartRateMaxInput').focus();
+  await page.locator('#heartRateMaxInput').fill('29');
+  await page.locator('#saveHeartRateMaxButton').click();
+  await expect(page.locator('#heartRateMaxStatus')).toHaveText('For display calculations, enter a whole number from 30 to 300.');
+  await page.locator('#heartRateMaxInput').fill('200');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#heartRateMaxStatus')).toHaveText('Maximum saved locally.');
+  await expect(page.locator('#heartRateZoneValue')).toHaveText('Waiting for a heart-rate reading');
+
+  const summary = page.locator('.heart-rate-help summary');
+  await summary.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('.heart-rate-help-content')).toBeVisible();
+  await expect(page.locator('.heart-rate-help-content')).toContainText('informational, not medical advice');
+});
+
+test('non-divisible maximums keep displayed percentages consistent with zone boundaries', async ({ page }) => {
+  await installBluetoothSensorMocks(page);
+  await loadCatalog(page);
+  await page.locator('#connectHeartRateButton').click();
+  await page.locator('#heartRateMaxInput').fill('199');
+  await page.locator('#saveHeartRateMaxButton').click();
+
+  await page.evaluate(() => window.__emitHeartRatePacket([0x00, 119]));
+  await expect(page.locator('#heartRateZoneValue')).toHaveText('Zone 1 · 59.7%');
+  await page.evaluate(() => window.__emitHeartRatePacket([0x00, 120]));
+  await expect(page.locator('#heartRateZoneValue')).toHaveText('Zone 2 · 60.3%');
 });
 
 test('Simplified Chinese browser locale variants with multiple underscores resolve to zh-CN', async ({ page }) => {
@@ -542,6 +944,12 @@ test('reset local data clears favorites, recents, selected route, and filters', 
   await page.locator('#startRideButton').click();
   await page.locator('#searchInput').fill('Bavaria');
   await page.locator('#durationFilter').selectOption('long');
+  await page.evaluate(() => {
+    localStorage.setItem('scenicRideCatalog.heartRateDeviceId', 'reset-heart-rate-device');
+    localStorage.setItem('scenicRideCatalog.heartRateDeviceName', 'Reset Heart Rate Monitor');
+    localStorage.setItem('scenicRideCatalog.heartRateMaximum', '190');
+    localStorage.setItem('scenicRideCatalog.heartRateZonePreferences', JSON.stringify({ showZones: false }));
+  });
 
   await expect(page.locator('#favoriteCount')).toHaveText('1 favorite');
   await expect(page.locator('#recentRoutes .recent-route-button')).toHaveCount(1);
@@ -562,7 +970,11 @@ test('reset local data clears favorites, recents, selected route, and filters', 
     recents: localStorage.getItem('scenicRideCatalog.recentRouteIds'),
     preferences: localStorage.getItem('scenicRideCatalog.filterPreferences'),
     sensorId: localStorage.getItem('scenicRideCatalog.sensorDeviceId'),
-    sensorName: localStorage.getItem('scenicRideCatalog.sensorDeviceName')
+    sensorName: localStorage.getItem('scenicRideCatalog.sensorDeviceName'),
+    heartRateId: localStorage.getItem('scenicRideCatalog.heartRateDeviceId'),
+    heartRateName: localStorage.getItem('scenicRideCatalog.heartRateDeviceName'),
+    heartRateMaximum: localStorage.getItem('scenicRideCatalog.heartRateMaximum'),
+    heartRateZonePreferences: localStorage.getItem('scenicRideCatalog.heartRateZonePreferences')
   }));
   const expectedState = {
     selected: null,
@@ -570,7 +982,11 @@ test('reset local data clears favorites, recents, selected route, and filters', 
     recents: null,
     preferences: null,
     sensorId: null,
-    sensorName: null
+    sensorName: null,
+    heartRateId: null,
+    heartRateName: null,
+    heartRateMaximum: null,
+    heartRateZonePreferences: null
   };
   if (!IS_PEDALSCAPE) {
     expectedState.sensorId = null;
@@ -687,10 +1103,11 @@ test(`exports only ${SITE_NAME} local data and imports a validated backup`, asyn
   });
   expect(backup).toMatchObject({ app: SITE_NAME, schemaVersion: 1 });
   const expectedBackupKeys = IS_PEDALSCAPE
-    ? ['favoriteRouteIds', 'filterPreferences', 'recentRouteIds', 'selectedRouteId', 'sensorDeviceId', 'sensorDeviceName']
-    : ['favoriteRouteIds', 'filterPreferences', 'recentRouteIds', 'selectedRouteId'];
+    ? ['favoriteRouteIds', 'filterPreferences', 'heartRateDeviceId', 'heartRateDeviceName', 'heartRateMaximum', 'heartRateZonePreferences', 'recentRouteIds', 'selectedRouteId', 'sensorDeviceId', 'sensorDeviceName']
+    : ['favoriteRouteIds', 'filterPreferences', 'heartRateDeviceId', 'heartRateDeviceName', 'heartRateMaximum', 'heartRateZonePreferences', 'recentRouteIds', 'selectedRouteId'];
   expect(Object.keys(backup.localData).sort()).toEqual(expectedBackupKeys);
   expect(backup.localData.unrelated).toBeUndefined();
+  expect(JSON.stringify(backup.localData)).not.toMatch(/currentBpm|measurementHistory/);
 
   const firstCard = page.locator('.route-card').first();
   await firstCard.click({ force: true });
@@ -703,6 +1120,10 @@ test(`exports only ${SITE_NAME} local data and imports a validated backup`, asyn
       favoriteRouteIds: [firstRouteId, 'stale-route'],
       recentRouteIds: [firstRouteId, 'stale-route'],
       filterPreferences: { query: 'bavaria', duration: 'long', scenery: 'all', intensity: 'all', favoritesOnly: true },
+      heartRateDeviceId: 'mock-heart-rate-device-2',
+      heartRateDeviceName: 'Saved Heart Rate Monitor',
+      heartRateMaximum: 190,
+      heartRateZonePreferences: { showZones: false },
       ...(IS_PEDALSCAPE
         ? {
             sensorDeviceId: 'mock-cadence-device-2',
@@ -722,6 +1143,10 @@ test(`exports only ${SITE_NAME} local data and imports a validated backup`, asyn
   await expect(page.locator('#favoriteCount')).toHaveText('1 favorite');
   expect(await page.evaluate(() => localStorage.getItem('unrelated.key'))).toBe('leave me alone');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('scenicRideCatalog.favoriteRouteIds')))).toEqual([firstRouteId]);
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateDeviceId'))).toBe('mock-heart-rate-device-2');
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateDeviceName'))).toBe('Saved Heart Rate Monitor');
+  expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.heartRateMaximum'))).toBe('190');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('scenicRideCatalog.heartRateZonePreferences')))).toEqual({ showZones: false });
   if (IS_PEDALSCAPE) {
     expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.sensorDeviceId'))).toBe('mock-cadence-device-2');
     expect(await page.evaluate(() => localStorage.getItem('scenicRideCatalog.sensorDeviceName'))).toBe('Saved Mock Sensor');

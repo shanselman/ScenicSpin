@@ -44,6 +44,11 @@ Last updated: 2026-06-22
 - PWA:
   - The manifest and service worker are tokenized per site.
   - The app shell, catalog JSON, candidate backlog JSON, icons, and core assets are cached.
+- Bluetooth sensors:
+  - PedalScape supports an independent CSC cadence session and standard-HRS heart-rate session at the same time.
+  - BeltScape exposes the shared heart-rate session but no cadence UI.
+  - Heart-rate parsing and zone classification live in `src/heart-rate.js`; optional monitor examples live in `data/heart-rate-monitors.json`.
+  - Zones require only a maximum entered by the user. No age, gender, demographic, or formula-derived maximum is used.
 
 ## Data model and curation workflow
 
@@ -95,6 +100,10 @@ Last updated: 2026-06-22
   - `scenicRideCatalog.recentRouteIds`
   - `scenicRideCatalog.filterPreferences`
   - `<SiteName>.reviewDecisions`, for example `PedalScape.reviewDecisions`
+  - `scenicRideCatalog.sensorDeviceId` and `scenicRideCatalog.sensorDeviceName` for PedalScape cadence
+  - `scenicRideCatalog.heartRateDeviceId` and `scenicRideCatalog.heartRateDeviceName`
+  - `scenicRideCatalog.heartRateMaximum`
+  - `scenicRideCatalog.heartRateZonePreferences`
 - Backup format:
   - `app` is the site name.
   - `schemaVersion: 1`
@@ -102,6 +111,8 @@ Last updated: 2026-06-22
   - `localData.favoriteRouteIds`
   - `localData.recentRouteIds`
   - `localData.filterPreferences`
+  - Heart-rate saved-device metadata, the user-entered maximum, and zone preferences
+  - Live BPM and measurement history are intentionally excluded
 - Offline/install behavior:
   - The app shell, catalog JSON, backlog JSON, and icons are cached by the service worker.
   - The app can render the shell/catalog offline after caching.
@@ -133,6 +144,10 @@ Last updated: 2026-06-22
   - Install prompt handling.
   - Export/import validation.
   - Service-worker offline app shell and route data.
+  - Standard-HRS parsing, zone boundaries, missing-maximum behavior, and stale-reading clearing.
+  - Heart-rate connect/update/disconnect/reconnect/forget behavior on both generated sites.
+  - Simultaneous independent cadence plus heart rate on PedalScape and heart-rate-only BeltScape behavior.
+  - Heart-rate debug simulation, local backup/reset privacy, locale parity, accessibility semantics, and exact affiliate disclosure/link contracts.
 
 ## Social and branding
 

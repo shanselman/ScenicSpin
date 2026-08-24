@@ -5,7 +5,13 @@ const path = require('path');
 
 const root = process.cwd();
 const errors = [];
-const warnings = [];
+const expectedLocaleFiles = ['en.json', 'es.json', 'fr.json', 'it.json', 'tr.json', 'zh-CN.json', 'zh-TW.json'];
+const expectedHeartRateProducts = new Map([
+  ['CooSpo H808S', 'B0FCY41J5N'],
+  ['Polar H9', 'B08GHH4ZKL'],
+  ['Polar H10', 'B0F69ZP1D8'],
+  ['Polar Verity Sense', 'B0F1HY5HGT']
+]);
 
 const catalogFiles = [
   path.join('routes', 'catalog.json'),
@@ -198,7 +204,10 @@ function validateLocales() {
     .filter((file) => file.endsWith('.json'))
     .sort();
 
-  if (!localeFiles.includes('en.json')) errors.push('locales: en.json is required');
+  const missingLocaleFiles = expectedLocaleFiles.filter((file) => !localeFiles.includes(file));
+  const unexpectedLocaleFiles = localeFiles.filter((file) => !expectedLocaleFiles.includes(file));
+  if (missingLocaleFiles.length > 0) errors.push(`locales: missing required files: ${missingLocaleFiles.join(', ')}`);
+  if (unexpectedLocaleFiles.length > 0) errors.push(`locales: unexpected files require validator registration: ${unexpectedLocaleFiles.join(', ')}`);
 
   for (const fileName of localeFiles) {
     const relativePath = path.join('locales', fileName);
@@ -210,7 +219,7 @@ function validateLocales() {
     const extra = actualKeys.filter((key) => !expectedKeys.includes(key));
 
     if (missing.length > 0) errors.push(`${relativePath}: missing locale keys: ${missing.join(', ')}`);
-    if (extra.length > 0) warnings.push(`${relativePath}: extra locale keys: ${extra.join(', ')}`);
+    if (extra.length > 0) errors.push(`${relativePath}: extra locale keys: ${extra.join(', ')}`);
 
     for (const key of expectedKeys) {
       if (key in locale && typeof locale[key] !== typeof english[key]) {
@@ -220,15 +229,63 @@ function validateLocales() {
   }
 }
 
+function validateHeartRateRecommendations() {
+  const file = path.join('data', 'heart-rate-monitors.json');
+  const data = readJson(file);
+  if (!data) return;
+
+  if (data.schemaVersion !== 1) errors.push(`${file}: schemaVersion must be 1`);
+  if (!Array.isArray(data.products)) {
+    errors.push(`${file}: products must be an array`);
+    return;
+  }
+  if (data.products.length !== expectedHeartRateProducts.size) {
+    errors.push(`${file}: expected exactly ${expectedHeartRateProducts.size} products`);
+  }
+
+  const seenNames = new Set();
+  for (const [index, product] of data.products.entries()) {
+    const label = product?.name || `at index ${index}`;
+    if (!product || typeof product !== 'object' || Array.isArray(product)) {
+      errors.push(`${file}: product ${label} must be an object`);
+      continue;
+    }
+
+    for (const field of ['name', 'asin', 'formFactorKey', 'connectionKey', 'amazonUrl']) {
+      if (!isNonEmptyString(product[field])) errors.push(`${file}: product ${label} must have non-empty ${field}`);
+    }
+
+    const expectedAsin = expectedHeartRateProducts.get(product.name);
+    if (!expectedAsin) {
+      errors.push(`${file}: unexpected product ${product.name}`);
+      continue;
+    }
+    if (seenNames.has(product.name)) errors.push(`${file}: duplicate product ${product.name}`);
+    seenNames.add(product.name);
+    if (product.asin !== expectedAsin) {
+      errors.push(`${file}: ${product.name} ASIN must be ${expectedAsin}`);
+    }
+
+    const expectedUrl = `https://www.amazon.com/dp/${expectedAsin}?tag=diabeticbooks`;
+    if (product.amazonUrl !== expectedUrl) {
+      errors.push(`${file}: ${product.name} amazonUrl must be exactly ${expectedUrl}`);
+    }
+    if ('price' in product) errors.push(`${file}: ${product.name} must not include a price`);
+  }
+
+  for (const name of expectedHeartRateProducts.keys()) {
+    if (!seenNames.has(name)) errors.push(`${file}: missing product ${name}`);
+  }
+}
+
 const routeIds = validateCatalogs();
 validateCandidateBacklog(routeIds);
 validateLocales();
-
-for (const warning of warnings) console.warn(`⚠ ${warning}`);
+validateHeartRateRecommendations();
 
 if (errors.length > 0) {
   for (const error of errors) console.error(`✗ ${error}`);
   process.exit(1);
 }
 
-console.log('✓ Catalog, candidate backlog, and locale validation passed');
+console.log('✓ Catalog, candidate backlog, locale, and heart-rate recommendation validation passed');

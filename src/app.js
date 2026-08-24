@@ -12,6 +12,10 @@ const recentRoutesStorageKey = 'scenicRideCatalog.recentRouteIds';
 const filterPreferencesStorageKey = 'scenicRideCatalog.filterPreferences';
 const sensorDeviceIdStorageKey = 'scenicRideCatalog.sensorDeviceId';
 const sensorDeviceNameStorageKey = 'scenicRideCatalog.sensorDeviceName';
+const heartRateDeviceIdStorageKey = 'scenicRideCatalog.heartRateDeviceId';
+const heartRateDeviceNameStorageKey = 'scenicRideCatalog.heartRateDeviceName';
+const heartRateMaximumStorageKey = 'scenicRideCatalog.heartRateMaximum';
+const heartRateZonePreferencesStorageKey = 'scenicRideCatalog.heartRateZonePreferences';
 const candidateReviewDecisionsStorageKey = '{{SITE_NAME}}.reviewDecisions';
 const localBackupSchemaVersion = 1;
 const localBackupAppName = '{{SITE_NAME}}';
@@ -22,16 +26,29 @@ const localStorageKeys = [
   favoriteRoutesStorageKey,
   recentRoutesStorageKey,
   filterPreferencesStorageKey,
+  heartRateDeviceIdStorageKey,
+  heartRateDeviceNameStorageKey,
+  heartRateMaximumStorageKey,
+  heartRateZonePreferencesStorageKey,
   ...(isPedalScape ? [sensorDeviceIdStorageKey, sensorDeviceNameStorageKey] : [])
 ];
 const cadenceServiceUuid = '00001816-0000-1000-8000-00805f9b34fb';
 const cadenceMeasurementUuid = '00002a5b-0000-1000-8000-00805f9b34fb';
+const heartRateServiceUuid = '0000180d-0000-1000-8000-00805f9b34fb';
+const heartRateMeasurementUuid = '00002a37-0000-1000-8000-00805f9b34fb';
+const heartRateRecommendationsUrl = 'data/heart-rate-monitors.json';
 const defaultCadenceStalenessLimit = 4;
 const minValidCadenceRpm = 0;
 const maxValidCadenceRpm = 200;
+const minimumConfigurableHeartRate = 30;
+const maximumConfigurableHeartRate = 300;
+const heartRateReadingTimeoutMs = 8000;
 const debugSensorQueryKeys = ['debugSensor', 'sensorDebug', 'debugCadence'];
 const debugSensorDeviceId = 'debug-cadence-sensor';
 const debugSensorDeviceName = 'Debug cadence sensor';
+const debugHeartRateQueryKeys = ['debugHeartRate', 'debugHr'];
+const debugHeartRateDeviceId = 'debug-heart-rate-monitor';
+const debugHeartRateDeviceName = 'Debug heart-rate monitor';
 const defaultRecommendationId = 'bavarian-countryside-90-minute-4k';
 const maxRecentRoutes = 5;
 const maxRouteOverlayBadges = 4;
@@ -52,6 +69,10 @@ const candidateDecisionLabels = {
   reject: 'Reject/No',
   defer: 'Defer/Maybe'
 };
+const {
+  getHeartRateZone,
+  parseHeartRateMeasurement
+} = globalThis.ScenicSpinHeartRate;
 
 let i18n = {};
 
@@ -176,6 +197,18 @@ const state = {
   sensorDebugActive: false
 };
 
+const heartRateSession = {
+  status: 'idle',
+  statusDetail: '',
+  deviceId: null,
+  deviceName: '',
+  currentBpm: null,
+  maximum: null,
+  showZones: true,
+  autoReconnectAttempted: false,
+  debugActive: false
+};
+
 const elements = {
   heroImage: document.querySelector('#heroImage'),
   heroImageFallback: document.querySelector('#heroImageFallback'),
@@ -201,6 +234,7 @@ const elements = {
   selectedLayout: document.querySelector('.selected-layout'),
   playerShell: document.querySelector('#playerShell'),
   sensorPanel: document.querySelector('#sensorPanel'),
+  cadenceSensorCard: document.querySelector('#cadenceSensorCard'),
   footerMyCadence: document.querySelector('#footerMyCadence'),
   sensorConnectionStatus: document.querySelector('#sensorConnectionStatus'),
   sensorSavedDevice: document.querySelector('#sensorSavedDevice'),
@@ -209,6 +243,22 @@ const elements = {
   reconnectSensorButton: document.querySelector('#reconnectSensorButton'),
   disconnectSensorButton: document.querySelector('#disconnectSensorButton'),
   forgetSensorButton: document.querySelector('#forgetSensorButton'),
+  heartRateConnectionStatus: document.querySelector('#heartRateConnectionStatus'),
+  heartRateSavedDevice: document.querySelector('#heartRateSavedDevice'),
+  heartRateBpmValue: document.querySelector('#heartRateBpmValue'),
+  heartRateZoneValue: document.querySelector('#heartRateZoneValue'),
+  heartRateZoneReading: document.querySelector('.heart-rate-zone-reading'),
+  heartRateMaxInput: document.querySelector('#heartRateMaxInput'),
+  heartRateMaxStatus: document.querySelector('#heartRateMaxStatus'),
+  heartRateShowZonesInput: document.querySelector('#heartRateShowZonesInput'),
+  saveHeartRateMaxButton: document.querySelector('#saveHeartRateMaxButton'),
+  clearHeartRateMaxButton: document.querySelector('#clearHeartRateMaxButton'),
+  connectHeartRateButton: document.querySelector('#connectHeartRateButton'),
+  reconnectHeartRateButton: document.querySelector('#reconnectHeartRateButton'),
+  disconnectHeartRateButton: document.querySelector('#disconnectHeartRateButton'),
+  forgetHeartRateButton: document.querySelector('#forgetHeartRateButton'),
+  heartRateProductList: document.querySelector('#heartRateProductList'),
+  heartRateProductsStatus: document.querySelector('#heartRateProductsStatus'),
   selectedTitle: document.querySelector('#selectedTitle'),
   selectedDescription: document.querySelector('#selectedDescription'),
   selectedMetadata: document.querySelector('#selectedMetadata'),
@@ -226,9 +276,14 @@ const elements = {
   backupJsonOutput: document.querySelector('#backupJsonOutput')
 };
 
-let bluetoothDevice = null;
+let cadenceDevice = null;
 let cadenceCharacteristic = null;
 let debugSensorTimer = null;
+let heartRateDevice = null;
+let heartRateCharacteristic = null;
+let heartRateStaleTimer = null;
+let debugHeartRateTimer = null;
+let sensorFullscreenReturnFocus = null;
 const cadenceParser = createCadenceParser(defaultCadenceStalenessLimit);
 
 function isDebugSensorRequested() {
@@ -241,8 +296,25 @@ function isDebugSensorRequested() {
   });
 }
 
+function isDebugHeartRateRequested() {
+  const params = new URLSearchParams(window.location.search);
+  return debugHeartRateQueryKeys.some((key) => {
+    const value = params.get(key);
+    if (key === 'debugHeartRate' && Number.isFinite(Number.parseInt(value || '', 10))) return true;
+    return value === '' || value === '1' || value === 'true' || value === 'yes';
+  });
+}
+
 function isSensorConnected() {
-  return state.sensorDebugActive || Boolean(bluetoothDevice?.gatt?.connected);
+  return state.sensorDebugActive || Boolean(cadenceDevice?.gatt?.connected);
+}
+
+function isHeartRateConnected() {
+  return heartRateSession.debugActive || Boolean(heartRateDevice?.gatt?.connected);
+}
+
+function isAnySensorConnected() {
+  return isSensorConnected() || isHeartRateConnected();
 }
 
 function createCadenceParser(stalenessLimit = defaultCadenceStalenessLimit) {
@@ -553,8 +625,18 @@ function isWebBluetoothSupported() {
   return Boolean(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
 }
 
+function isHeartRateWebBluetoothSupported() {
+  if (isDebugHeartRateRequested()) return true;
+  return Boolean(navigator.bluetooth && typeof navigator.bluetooth.requestDevice === 'function');
+}
+
 function canReconnectSavedSensor() {
   if (isDebugSensorRequested()) return true;
+  return Boolean(navigator.bluetooth && typeof navigator.bluetooth.getDevices === 'function');
+}
+
+function canReconnectSavedHeartRate() {
+  if (isDebugHeartRateRequested()) return true;
   return Boolean(navigator.bluetooth && typeof navigator.bluetooth.getDevices === 'function');
 }
 
@@ -603,6 +685,105 @@ function clearStoredSensor() {
   }
   state.sensorDeviceId = null;
   state.sensorDeviceName = '';
+}
+
+function readStoredHeartRateDeviceId() {
+  try {
+    const value = localStorage.getItem(heartRateDeviceIdStorageKey);
+    return typeof value === 'string' && value.trim() ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+function readStoredHeartRateDeviceName() {
+  try {
+    return localStorage.getItem(heartRateDeviceNameStorageKey) || '';
+  } catch {
+    return '';
+  }
+}
+
+function saveStoredHeartRateDevice(deviceId, deviceName = '') {
+  if (!deviceId) return;
+  try {
+    localStorage.setItem(heartRateDeviceIdStorageKey, deviceId);
+    if (deviceName) {
+      localStorage.setItem(heartRateDeviceNameStorageKey, deviceName);
+    } else {
+      localStorage.removeItem(heartRateDeviceNameStorageKey);
+    }
+  } catch {
+    // Local app features gracefully degrade when storage is disabled.
+  }
+  heartRateSession.deviceId = deviceId;
+  heartRateSession.deviceName = deviceName || '';
+}
+
+function clearStoredHeartRateDevice() {
+  try {
+    localStorage.removeItem(heartRateDeviceIdStorageKey);
+    localStorage.removeItem(heartRateDeviceNameStorageKey);
+  } catch {
+    // Local app features gracefully degrade when storage is disabled.
+  }
+  heartRateSession.deviceId = null;
+  heartRateSession.deviceName = '';
+}
+
+function readStoredHeartRateMaximum() {
+  try {
+    const value = localStorage.getItem(heartRateMaximumStorageKey);
+    if (value === null) return null;
+    const maximum = Number(value);
+    return Number.isInteger(maximum) &&
+      maximum >= minimumConfigurableHeartRate &&
+      maximum <= maximumConfigurableHeartRate
+      ? maximum
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveStoredHeartRateMaximum(maximum) {
+  try {
+    if (maximum === null) {
+      localStorage.removeItem(heartRateMaximumStorageKey);
+    } else {
+      localStorage.setItem(heartRateMaximumStorageKey, String(maximum));
+    }
+  } catch {
+    // Local app features gracefully degrade when storage is disabled.
+  }
+  heartRateSession.maximum = maximum;
+}
+
+function normalizeHeartRateZonePreferences(value) {
+  if (value === undefined || value === null) return { showZones: true };
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('heartRateZonePreferences must be an object.');
+  }
+  return { showZones: value.showZones !== false };
+}
+
+function readStoredHeartRateZonePreferences() {
+  try {
+    return normalizeHeartRateZonePreferences(readLocalJson(heartRateZonePreferencesStorageKey, undefined));
+  } catch {
+    try {
+      localStorage.removeItem(heartRateZonePreferencesStorageKey);
+    } catch {
+      // Local app features gracefully degrade when storage is disabled.
+    }
+    return { showZones: true };
+  }
+}
+
+function saveStoredHeartRateZonePreferences() {
+  writeLocalJson(heartRateZonePreferencesStorageKey, {
+    showZones: heartRateSession.showZones
+  });
 }
 
 function readLocalJson(key, fallback) {
@@ -655,6 +836,13 @@ function loadLocalState() {
     state.sensorStatusDetail = '';
     state.sensorCurrentRpm = null;
   }
+  heartRateSession.deviceId = readStoredHeartRateDeviceId();
+  heartRateSession.deviceName = readStoredHeartRateDeviceName();
+  heartRateSession.maximum = readStoredHeartRateMaximum();
+  heartRateSession.showZones = readStoredHeartRateZonePreferences().showZones;
+  heartRateSession.status = isHeartRateWebBluetoothSupported() ? 'disconnected' : 'unsupported';
+  heartRateSession.statusDetail = '';
+  heartRateSession.currentBpm = null;
 }
 
 function routeExists(routeId) {
@@ -782,6 +970,12 @@ function getLocalBackupData() {
       scenery: state.scenery,
       intensity: state.intensity,
       favoritesOnly: state.favoritesOnly
+    },
+    heartRateDeviceId: heartRateSession.deviceId || null,
+    heartRateDeviceName: heartRateSession.deviceName || null,
+    heartRateMaximum: heartRateSession.maximum,
+    heartRateZonePreferences: {
+      showZones: heartRateSession.showZones
     }
   };
 
@@ -831,6 +1025,18 @@ function normalizeFilterPreferences(value) {
   };
 }
 
+function normalizeHeartRateMaximum(value) {
+  if (value === undefined || value === null) return null;
+  if (
+    !Number.isInteger(value) ||
+    value < minimumConfigurableHeartRate ||
+    value > maximumConfigurableHeartRate
+  ) {
+    throw new Error(`heartRateMaximum must be a whole number from ${minimumConfigurableHeartRate} to ${maximumConfigurableHeartRate}, or null.`);
+  }
+  return value;
+}
+
 function validateLocalBackup(backup) {
   if (!backup || typeof backup !== 'object' || Array.isArray(backup)) {
     throw new Error('Backup must be a JSON object.');
@@ -867,7 +1073,21 @@ function validateLocalBackup(backup) {
         ? null
         : typeof data.sensorDeviceName === 'string'
           ? data.sensorDeviceName
-          : (() => { throw new Error('sensorDeviceName must be a string or null.'); })()
+          : (() => { throw new Error('sensorDeviceName must be a string or null.'); })(),
+    heartRateDeviceId:
+      data.heartRateDeviceId == null
+        ? null
+        : typeof data.heartRateDeviceId === 'string'
+          ? data.heartRateDeviceId
+          : (() => { throw new Error('heartRateDeviceId must be a string or null.'); })(),
+    heartRateDeviceName:
+      data.heartRateDeviceName == null
+        ? null
+        : typeof data.heartRateDeviceName === 'string'
+          ? data.heartRateDeviceName
+          : (() => { throw new Error('heartRateDeviceName must be a string or null.'); })(),
+    heartRateMaximum: normalizeHeartRateMaximum(data.heartRateMaximum),
+    heartRateZonePreferences: normalizeHeartRateZonePreferences(data.heartRateZonePreferences)
   };
 }
 
@@ -877,7 +1097,7 @@ function downloadLocalBackup() {
   const anchor = document.createElement('a');
   const dateStamp = new Date().toISOString().slice(0, 10);
   anchor.href = url;
-  anchor.download = `pedalscape-local-backup-${dateStamp}.json`;
+  anchor.download = `${siteSlug}-local-backup-${dateStamp}.json`;
   document.body.append(anchor);
   anchor.click();
   anchor.remove();
@@ -898,7 +1118,10 @@ async function copyLocalBackup() {
   }
 }
 
-function applyImportedLocalData(data) {
+async function applyImportedLocalData(data) {
+  await disconnectSensor({ keepStatus: true });
+  await disconnectHeartRate({ keepStatus: true });
+
   localStorageKeys.forEach((key) => {
     try {
       localStorage.removeItem(key);
@@ -919,15 +1142,23 @@ function applyImportedLocalData(data) {
       clearStoredSensor();
     }
   }
+  if (typeof data.heartRateDeviceId === 'string' && data.heartRateDeviceId) {
+    saveStoredHeartRateDevice(data.heartRateDeviceId, data.heartRateDeviceName || '');
+  } else {
+    clearStoredHeartRateDevice();
+  }
+  saveStoredHeartRateMaximum(data.heartRateMaximum);
+  heartRateSession.showZones = data.heartRateZonePreferences.showZones;
+  saveStoredHeartRateZonePreferences();
 
   loadLocalState();
   state.sensorAutoReconnectAttempted = false;
+  heartRateSession.autoReconnectAttempted = false;
   renderSensorPanel();
   cleanupLocalRouteIds();
   applyFilterPreferences();
-  autoReconnectSavedSensor().catch(() => {
-    // Import should succeed even if reconnect is unavailable.
-  });
+  await autoReconnectSavedSensor();
+  await autoReconnectSavedHeartRate();
 
   const featured = routes.length > 0 ? chooseFeaturedRoute() : { route: null, mode: 'recommended' };
   setFeaturedRoute(featured.route, featured.mode);
@@ -945,7 +1176,7 @@ async function importLocalBackup(file) {
   try {
     const backup = JSON.parse(await file.text());
     const data = validateLocalBackup(backup);
-    applyImportedLocalData(data);
+    await applyImportedLocalData(data);
     setAppStatus(t('import_success'));
   } catch (error) {
     setAppStatus(t('import_failed', { message: error.message }));
@@ -1347,6 +1578,9 @@ function applySiteSpecificContent() {
   if (elements.footerMyCadence) {
     elements.footerMyCadence.hidden = !isPedalScape;
   }
+  if (elements.cadenceSensorCard) {
+    elements.cadenceSensorCard.hidden = !isPedalScape;
+  }
 }
 
 function setSensorStatus(status, detail = '') {
@@ -1428,51 +1662,176 @@ function getSensorStatusLabel() {
 function renderSensorPanel() {
   if (!elements.sensorPanel) return;
 
-  if (!isPedalScape) {
-    elements.sensorPanel.hidden = true;
-    return;
-  }
-
   elements.sensorPanel.hidden = false;
-  const supported = isWebBluetoothSupported();
-  const connected = isSensorConnected();
-  const busy = ['scanning', 'connecting', 'reconnecting'].includes(state.sensorStatus);
-  const canReconnect = canReconnectSavedSensor() && Boolean(state.sensorDeviceId);
-
-  if (!supported && state.sensorStatus !== 'unsupported') {
-    state.sensorStatus = 'unsupported';
-    state.sensorStatusDetail = '';
+  if (elements.cadenceSensorCard) {
+    elements.cadenceSensorCard.hidden = !isPedalScape;
   }
 
-  elements.sensorConnectionStatus.textContent = getSensorStatusLabel();
-  elements.sensorSavedDevice.textContent = state.sensorDeviceName || t('sensor_saved_none');
-  elements.sensorCadenceValue.textContent = Number.isFinite(state.sensorCurrentRpm)
-    ? t('sensor_cadence_value', { rpm: state.sensorCurrentRpm })
-    : t('sensor_cadence_placeholder');
+  if (isPedalScape) {
+    const cadenceSupported = isWebBluetoothSupported();
+    const cadenceConnected = isSensorConnected();
+    const cadenceBusy = ['scanning', 'connecting', 'reconnecting'].includes(state.sensorStatus);
+    const canReconnectCadence = canReconnectSavedSensor() && Boolean(state.sensorDeviceId);
 
+    if (!cadenceSupported && state.sensorStatus !== 'unsupported') {
+      state.sensorStatus = 'unsupported';
+      state.sensorStatusDetail = '';
+    }
+
+    elements.sensorConnectionStatus.textContent = getSensorStatusLabel();
+    elements.sensorSavedDevice.textContent = state.sensorDeviceName || t('sensor_saved_none');
+    elements.sensorCadenceValue.textContent = Number.isFinite(state.sensorCurrentRpm)
+      ? t('sensor_cadence_value', { rpm: formatLocalizedInteger(state.sensorCurrentRpm) })
+      : t('sensor_cadence_placeholder');
+
+    elements.connectSensorButton.disabled = !cadenceSupported || cadenceBusy;
+    elements.reconnectSensorButton.disabled = !cadenceSupported || cadenceBusy || !canReconnectCadence;
+    elements.disconnectSensorButton.disabled = !cadenceSupported || cadenceBusy || !cadenceConnected;
+    elements.forgetSensorButton.disabled = !state.sensorDeviceId;
+  }
+
+  renderHeartRatePanel();
+
+  const connected = isAnySensorConnected();
   if (!connected && elements.selectedLayout?.classList.contains('sensor-fullscreen-modal')) {
     exitPwaFullscreen();
   }
-
-  elements.connectSensorButton.disabled = !supported || busy;
-  elements.reconnectSensorButton.disabled = !supported || busy || !canReconnect;
-  elements.disconnectSensorButton.disabled = !supported || busy || !connected;
-  elements.forgetSensorButton.disabled = !state.sensorDeviceId;
   elements.selectedLayout?.classList.toggle('sensor-focus-active', connected);
   renderPlayerSensorOverlay();
+}
+
+function formatLocalizedInteger(value) {
+  return new Intl.NumberFormat(document.documentElement.lang || 'en', {
+    maximumFractionDigits: 0
+  }).format(value);
+}
+
+function formatHeartRatePercentage(ratio) {
+  const truncatedRatio = Math.floor(ratio * 1000) / 1000;
+  return new Intl.NumberFormat(document.documentElement.lang || 'en', {
+    style: 'percent',
+    maximumFractionDigits: 1
+  }).format(truncatedRatio);
+}
+
+function getHeartRateZonePresentation() {
+  if (!heartRateSession.showZones) {
+    return { id: 'none', text: t('heart_rate_zone_hidden'), shortText: '' };
+  }
+  if (!Number.isInteger(heartRateSession.maximum)) {
+    return { id: 'none', text: t('heart_rate_zone_unavailable'), shortText: '' };
+  }
+  if (!Number.isFinite(heartRateSession.currentBpm)) {
+    return { id: 'none', text: t('heart_rate_zone_waiting'), shortText: '' };
+  }
+
+  const zone = getHeartRateZone(heartRateSession.currentBpm, heartRateSession.maximum);
+  if (!zone) return { id: 'none', text: t('heart_rate_zone_unavailable'), shortText: '' };
+
+  const percentage = formatHeartRatePercentage(zone.ratio);
+  if (zone.id === 'below') {
+    return {
+      id: zone.id,
+      text: t('heart_rate_zone_below', { percent: percentage }),
+      shortText: t('heart_rate_zone_below_short')
+    };
+  }
+  if (zone.id === 'above') {
+    return {
+      id: zone.id,
+      text: t('heart_rate_zone_above', { percent: percentage }),
+      shortText: t('heart_rate_zone_above_short')
+    };
+  }
+
+  const zoneName = t(`heart_rate_${zone.id}`);
+  return {
+    id: zone.id,
+    text: t('heart_rate_zone_value', { zone: zoneName, percent: percentage }),
+    shortText: zoneName
+  };
+}
+
+function getHeartRateStatusLabel() {
+  if (heartRateSession.statusDetail) return heartRateSession.statusDetail;
+
+  switch (heartRateSession.status) {
+    case 'unsupported':
+      return t('heart_rate_status_unsupported');
+    case 'scanning':
+      return t('heart_rate_status_scanning');
+    case 'connecting':
+      return t('heart_rate_status_connecting');
+    case 'reconnecting':
+      return t('heart_rate_status_reconnecting');
+    case 'connected':
+      return heartRateSession.deviceName
+        ? t('heart_rate_status_connected_named', { name: heartRateSession.deviceName })
+        : t('heart_rate_status_connected');
+    case 'error':
+      return t('heart_rate_status_error');
+    case 'disconnected':
+      return t('heart_rate_status_disconnected');
+    default:
+      return t('heart_rate_status_idle');
+  }
+}
+
+function renderHeartRatePanel() {
+  const supported = isHeartRateWebBluetoothSupported();
+  const connected = isHeartRateConnected();
+  const busy = ['scanning', 'connecting', 'reconnecting'].includes(heartRateSession.status);
+  const canReconnect = canReconnectSavedHeartRate() && Boolean(heartRateSession.deviceId);
+
+  if (!supported && heartRateSession.status !== 'unsupported') {
+    heartRateSession.status = 'unsupported';
+    heartRateSession.statusDetail = '';
+  }
+
+  const zone = getHeartRateZonePresentation();
+  elements.heartRateConnectionStatus.textContent = getHeartRateStatusLabel();
+  elements.heartRateSavedDevice.textContent = heartRateSession.deviceName || t('heart_rate_saved_none');
+  elements.heartRateBpmValue.textContent = Number.isFinite(heartRateSession.currentBpm)
+    ? t('heart_rate_bpm_value', { bpm: formatLocalizedInteger(heartRateSession.currentBpm) })
+    : t('heart_rate_bpm_placeholder');
+  elements.heartRateZoneValue.textContent = zone.text;
+  elements.heartRateZoneReading.dataset.zone = zone.id;
+  elements.heartRateShowZonesInput.checked = heartRateSession.showZones;
+  if (document.activeElement !== elements.heartRateMaxInput) {
+    elements.heartRateMaxInput.value = heartRateSession.maximum ?? '';
+  }
+
+  elements.connectHeartRateButton.disabled = !supported || busy;
+  elements.reconnectHeartRateButton.disabled = !supported || busy || !canReconnect;
+  elements.disconnectHeartRateButton.disabled = !supported || busy || !connected;
+  elements.forgetHeartRateButton.disabled = !heartRateSession.deviceId;
+  elements.clearHeartRateMaxButton.disabled = heartRateSession.maximum === null;
 }
 
 function renderPlayerSensorOverlay() {
   const existingOverlay = elements.playerShell.querySelector('.player-sensor-overlay');
   if (existingOverlay) existingOverlay.remove();
-  if (!isPedalScape || !state.selectedRoute) return;
-  if (!isSensorConnected()) return;
+  if (!state.selectedRoute || !isAnySensorConnected()) return;
+
+  const values = [];
+  if (isPedalScape && isSensorConnected()) {
+    values.push(Number.isFinite(state.sensorCurrentRpm)
+      ? t('sensor_cadence_value', { rpm: formatLocalizedInteger(state.sensorCurrentRpm) })
+      : t('sensor_cadence_placeholder'));
+  }
+  if (isHeartRateConnected()) {
+    values.push(Number.isFinite(heartRateSession.currentBpm)
+      ? t('heart_rate_bpm_value', { bpm: formatLocalizedInteger(heartRateSession.currentBpm) })
+      : t('heart_rate_bpm_placeholder'));
+    const zone = getHeartRateZonePresentation();
+    if (zone.shortText) values.push(zone.shortText);
+  }
 
   const overlay = document.createElement('div');
   overlay.className = 'player-sensor-overlay';
   overlay.innerHTML = `
-    <span class="player-sensor-overlay__label">${escapeHtml(t('sensor_title'))}</span>
-    <strong class="player-sensor-overlay__value">${escapeHtml(Number.isFinite(state.sensorCurrentRpm) ? t('sensor_cadence_value', { rpm: state.sensorCurrentRpm }) : t('sensor_cadence_placeholder'))}</strong>
+    <span class="player-sensor-overlay__label">${escapeHtml(t('sensors_overlay_label'))}</span>
+    <strong class="player-sensor-overlay__value">${escapeHtml(values.join(' · '))}</strong>
   `;
   elements.playerShell.append(overlay);
 }
@@ -1495,7 +1854,7 @@ function handleCadenceMeasurementChanged(event) {
 
 async function disconnectSensor(options = {}) {
   const { clearSaved = false, keepStatus = false } = options;
-  const previousDevice = bluetoothDevice;
+  const previousDevice = cadenceDevice;
 
   if (state.sensorDebugActive) {
     stopDebugSensor({ keepStatus: true });
@@ -1520,7 +1879,7 @@ async function disconnectSensor(options = {}) {
     }
   }
 
-  bluetoothDevice = null;
+  cadenceDevice = null;
   cadenceParser.reset();
   state.sensorCurrentRpm = null;
 
@@ -1530,7 +1889,7 @@ async function disconnectSensor(options = {}) {
 
 function handleSensorDisconnected() {
   cadenceCharacteristic = null;
-  bluetoothDevice = null;
+  cadenceDevice = null;
   state.sensorCurrentRpm = null;
   setSensorStatus('disconnected');
 }
@@ -1546,8 +1905,8 @@ async function connectToSensorDevice(device, { status = 'connecting' } = {}) {
 
   try {
     if (!device.gatt) throw new Error(t('sensor_status_gatt_unavailable'));
-    bluetoothDevice = device;
-    bluetoothDevice.addEventListener('gattserverdisconnected', handleSensorDisconnected);
+    cadenceDevice = device;
+    cadenceDevice.addEventListener('gattserverdisconnected', handleSensorDisconnected);
 
     const server = await device.gatt.connect();
     const service = await server.getPrimaryService(cadenceServiceUuid);
@@ -1640,6 +1999,297 @@ async function autoReconnectSavedSensor() {
     return;
   }
   await reconnectSavedSensor();
+}
+
+function setHeartRateStatus(status, detail = '') {
+  heartRateSession.status = status;
+  heartRateSession.statusDetail = detail;
+  renderSensorPanel();
+}
+
+function clearHeartRateStaleTimer() {
+  if (!heartRateStaleTimer) return;
+  window.clearTimeout(heartRateStaleTimer);
+  heartRateStaleTimer = null;
+}
+
+function clearHeartRateReading() {
+  clearHeartRateStaleTimer();
+  heartRateSession.currentBpm = null;
+}
+
+function scheduleHeartRateReadingTimeout() {
+  clearHeartRateStaleTimer();
+  heartRateStaleTimer = window.setTimeout(() => {
+    heartRateStaleTimer = null;
+    heartRateSession.currentBpm = null;
+    renderSensorPanel();
+  }, heartRateReadingTimeoutMs);
+}
+
+function getDebugHeartRateBaseBpm() {
+  const value = new URLSearchParams(window.location.search).get('debugHeartRate');
+  const bpm = Number.parseInt(value || '', 10);
+  if (!Number.isFinite(bpm)) return 146;
+  return Math.min(maximumConfigurableHeartRate, Math.max(minimumConfigurableHeartRate, bpm));
+}
+
+function stopDebugHeartRate({ keepStatus = false } = {}) {
+  if (debugHeartRateTimer) {
+    window.clearInterval(debugHeartRateTimer);
+    debugHeartRateTimer = null;
+  }
+  clearHeartRateReading();
+  if (!heartRateSession.debugActive) return;
+
+  heartRateSession.debugActive = false;
+  if (heartRateSession.deviceId === debugHeartRateDeviceId) {
+    heartRateSession.deviceId = readStoredHeartRateDeviceId();
+    heartRateSession.deviceName = readStoredHeartRateDeviceName();
+  }
+  if (!keepStatus) setHeartRateStatus('disconnected');
+}
+
+function startDebugHeartRate() {
+  if (!isDebugHeartRateRequested() || heartRateSession.debugActive) return;
+
+  stopDebugHeartRate({ keepStatus: true });
+  const baseBpm = getDebugHeartRateBaseBpm();
+  heartRateSession.debugActive = true;
+  heartRateSession.deviceId = debugHeartRateDeviceId;
+  heartRateSession.deviceName = debugHeartRateDeviceName;
+  heartRateSession.currentBpm = baseBpm;
+  heartRateSession.autoReconnectAttempted = true;
+  scheduleHeartRateReadingTimeout();
+  setHeartRateStatus('connected', t('heart_rate_debug_connected'));
+
+  let tick = 0;
+  debugHeartRateTimer = window.setInterval(() => {
+    tick += 1;
+    heartRateSession.currentBpm = Math.round(baseBpm + Math.sin(tick / 3) * 7);
+    scheduleHeartRateReadingTimeout();
+    renderSensorPanel();
+  }, 1400);
+}
+
+function handleHeartRateMeasurementChanged(event) {
+  const value = event?.target?.value;
+  const bpm = parseHeartRateMeasurement(value);
+  if (!Number.isInteger(bpm)) return;
+
+  heartRateSession.currentBpm = bpm;
+  scheduleHeartRateReadingTimeout();
+  renderSensorPanel();
+}
+
+async function disconnectHeartRate(options = {}) {
+  const { clearSaved = false, keepStatus = false } = options;
+  const previousDevice = heartRateDevice;
+
+  if (heartRateSession.debugActive) {
+    stopDebugHeartRate({ keepStatus: true });
+  }
+  clearHeartRateReading();
+
+  if (heartRateCharacteristic) {
+    heartRateCharacteristic.removeEventListener('characteristicvaluechanged', handleHeartRateMeasurementChanged);
+    try {
+      await heartRateCharacteristic.stopNotifications();
+    } catch {
+      // Ignore stop notification errors while tearing down connection state.
+    }
+    heartRateCharacteristic = null;
+  }
+
+  if (previousDevice) {
+    previousDevice.removeEventListener('gattserverdisconnected', handleHeartRateDisconnected);
+    try {
+      if (previousDevice.gatt?.connected) previousDevice.gatt.disconnect();
+    } catch {
+      // Ignore disconnect errors while tearing down connection state.
+    }
+  }
+
+  heartRateDevice = null;
+  if (clearSaved) clearStoredHeartRateDevice();
+  if (!keepStatus) setHeartRateStatus('disconnected');
+}
+
+function handleHeartRateDisconnected() {
+  clearHeartRateReading();
+  if (heartRateCharacteristic) {
+    heartRateCharacteristic.removeEventListener('characteristicvaluechanged', handleHeartRateMeasurementChanged);
+  }
+  heartRateCharacteristic = null;
+  heartRateDevice = null;
+  setHeartRateStatus('disconnected');
+}
+
+async function connectToHeartRateDevice(device, { status = 'connecting' } = {}) {
+  if (!device) {
+    setHeartRateStatus('error', t('heart_rate_status_error'));
+    return;
+  }
+
+  await disconnectHeartRate({ keepStatus: true });
+  setHeartRateStatus(status);
+
+  try {
+    if (!device.gatt) throw new Error(t('heart_rate_status_gatt_unavailable'));
+    heartRateDevice = device;
+    heartRateDevice.addEventListener('gattserverdisconnected', handleHeartRateDisconnected);
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(heartRateServiceUuid);
+    const characteristic = await service.getCharacteristic(heartRateMeasurementUuid);
+    await characteristic.startNotifications();
+    characteristic.addEventListener('characteristicvaluechanged', handleHeartRateMeasurementChanged);
+    heartRateCharacteristic = characteristic;
+    clearHeartRateReading();
+
+    const deviceName = device.name || heartRateSession.deviceName || '';
+    saveStoredHeartRateDevice(device.id, deviceName);
+    setHeartRateStatus('connected');
+  } catch (error) {
+    const message = error?.message
+      ? t('heart_rate_status_error_with_detail', { message: error.message })
+      : t('heart_rate_status_error');
+    await disconnectHeartRate({ keepStatus: true });
+    setHeartRateStatus('error', message);
+  }
+}
+
+async function connectHeartRateFromPicker() {
+  if (isDebugHeartRateRequested()) {
+    startDebugHeartRate();
+    return;
+  }
+  if (!isHeartRateWebBluetoothSupported()) {
+    setHeartRateStatus('unsupported');
+    return;
+  }
+
+  setHeartRateStatus('scanning');
+  try {
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{ services: [heartRateServiceUuid] }],
+      optionalServices: [heartRateServiceUuid]
+    });
+    if (!device) {
+      setHeartRateStatus('disconnected');
+      return;
+    }
+    await connectToHeartRateDevice(device, { status: 'connecting' });
+  } catch (error) {
+    if (error?.name === 'NotFoundError') {
+      setHeartRateStatus('disconnected', t('heart_rate_status_cancelled'));
+      return;
+    }
+    const message = error?.message
+      ? t('heart_rate_status_error_with_detail', { message: error.message })
+      : t('heart_rate_status_error');
+    setHeartRateStatus('error', message);
+  }
+}
+
+async function reconnectSavedHeartRate() {
+  if (!heartRateSession.deviceId) return;
+  if (isDebugHeartRateRequested()) {
+    startDebugHeartRate();
+    return;
+  }
+  if (!isHeartRateWebBluetoothSupported()) {
+    setHeartRateStatus('unsupported');
+    return;
+  }
+  if (!canReconnectSavedHeartRate()) {
+    setHeartRateStatus('error', t('heart_rate_status_reconnect_unavailable'));
+    return;
+  }
+
+  setHeartRateStatus('reconnecting');
+  try {
+    const devices = await navigator.bluetooth.getDevices();
+    const saved = devices.find((device) => device.id === heartRateSession.deviceId);
+    if (!saved) {
+      setHeartRateStatus('disconnected', t('heart_rate_status_saved_not_found'));
+      return;
+    }
+    await connectToHeartRateDevice(saved, { status: 'reconnecting' });
+  } catch (error) {
+    const message = error?.message
+      ? t('heart_rate_status_error_with_detail', { message: error.message })
+      : t('heart_rate_status_error');
+    setHeartRateStatus('error', message);
+  }
+}
+
+async function autoReconnectSavedHeartRate() {
+  if (heartRateSession.autoReconnectAttempted) return;
+  heartRateSession.autoReconnectAttempted = true;
+  if (
+    !heartRateSession.deviceId ||
+    !isHeartRateWebBluetoothSupported() ||
+    !canReconnectSavedHeartRate()
+  ) {
+    renderSensorPanel();
+    return;
+  }
+  await reconnectSavedHeartRate();
+}
+
+function saveHeartRateMaximumFromInput() {
+  const rawValue = elements.heartRateMaxInput.value.trim();
+  const maximum = Number(rawValue);
+  if (
+    rawValue === '' ||
+    !Number.isInteger(maximum) ||
+    maximum < minimumConfigurableHeartRate ||
+    maximum > maximumConfigurableHeartRate
+  ) {
+    elements.heartRateMaxStatus.textContent = t('heart_rate_max_invalid', {
+      minimum: formatLocalizedInteger(minimumConfigurableHeartRate),
+      maximum: formatLocalizedInteger(maximumConfigurableHeartRate)
+    });
+    return;
+  }
+
+  saveStoredHeartRateMaximum(maximum);
+  elements.heartRateMaxStatus.textContent = t('heart_rate_max_saved');
+  renderSensorPanel();
+}
+
+function clearHeartRateMaximum() {
+  saveStoredHeartRateMaximum(null);
+  elements.heartRateMaxStatus.textContent = t('heart_rate_max_cleared');
+  renderSensorPanel();
+}
+
+function renderHeartRateProducts(products) {
+  elements.heartRateProductList.innerHTML = products.map((product) => `
+    <li>
+      <strong>${escapeHtml(product.name)}</strong>
+      <span>${escapeHtml(t(product.formFactorKey))}</span>
+      <span>${escapeHtml(t(product.connectionKey))}</span>
+      <a href="${escapeHtml(product.amazonUrl)}" target="_blank" rel="sponsored nofollow noopener">${escapeHtml(t('heart_rate_product_link', { name: product.name }))}</a>
+    </li>
+  `).join('');
+}
+
+async function loadHeartRateRecommendations() {
+  elements.heartRateProductsStatus.textContent = t('heart_rate_products_loading');
+  try {
+    const response = await fetch(heartRateRecommendationsUrl, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Heart-rate recommendations request failed: ${response.status}`);
+    const data = await response.json();
+    if (!Array.isArray(data.products)) throw new Error('Heart-rate recommendations are missing products.');
+    renderHeartRateProducts(data.products);
+    elements.heartRateProductsStatus.textContent = '';
+  } catch (error) {
+    console.error(error);
+    elements.heartRateProductList.innerHTML = '';
+    elements.heartRateProductsStatus.textContent = t('heart_rate_products_error');
+  }
 }
 
 function showUpdateReady(worker) {
@@ -2019,14 +2669,21 @@ function selectRoute(routeId, moveToPlayer = false, options = {}) {
 }
 
 function exitPwaFullscreen() {
+  const wasSensorFullscreen = elements.selectedLayout?.classList.contains('sensor-fullscreen-modal');
+  const returnFocus = sensorFullscreenReturnFocus;
   elements.selectedLayout?.classList.remove('pwa-fullscreen');
   elements.selectedLayout?.classList.remove('sensor-fullscreen-modal');
   elements.selectedLayout?.removeAttribute('role');
   elements.selectedLayout?.removeAttribute('aria-modal');
+  elements.selectedLayout?.removeAttribute('aria-labelledby');
   elements.playerShell.classList.remove('pwa-fullscreen');
   document.body.classList.remove('sensor-fullscreen-open');
   removePwaFullscreenCloseButton();
   updateFullscreenButton();
+  sensorFullscreenReturnFocus = null;
+  if (wasSensorFullscreen && returnFocus?.isConnected) {
+    window.requestAnimationFrame(() => returnFocus.focus({ preventScroll: true }));
+  }
 }
 
 function createPwaFullscreenCloseButton() {
@@ -2049,16 +2706,49 @@ function removePwaFullscreenCloseButton() {
   if (btn) btn.remove();
 }
 
+function trapSensorFullscreenFocus(event) {
+  if (event.key !== 'Tab' || !elements.selectedLayout?.classList.contains('sensor-fullscreen-modal')) return;
+
+  const focusable = [...elements.selectedLayout.querySelectorAll(
+    'iframe, video[controls], a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])'
+  )].filter((element) =>
+    !element.hidden &&
+    element.getAttribute('aria-hidden') !== 'true' &&
+    element.getClientRects().length > 0
+  );
+  if (focusable.length === 0) {
+    event.preventDefault();
+    return;
+  }
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (!elements.selectedLayout.contains(document.activeElement)) {
+    event.preventDefault();
+    first.focus();
+  } else if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 async function requestFullscreen() {
-  if (isSensorConnected() && elements.selectedLayout) {
+  if (isAnySensorConnected() && elements.selectedLayout) {
     if (elements.selectedLayout.classList.contains('sensor-fullscreen-modal')) {
       exitPwaFullscreen();
       return;
     }
 
+    sensorFullscreenReturnFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : elements.fullscreenButton;
     elements.selectedLayout.classList.add('sensor-fullscreen-modal');
     elements.selectedLayout.setAttribute('role', 'dialog');
     elements.selectedLayout.setAttribute('aria-modal', 'true');
+    elements.selectedLayout.setAttribute('aria-labelledby', 'sensorPanelTitle');
     document.body.classList.add('sensor-fullscreen-open');
     const closeButton = createPwaFullscreenCloseButton();
     updateFullscreenButton();
@@ -2132,7 +2822,7 @@ async function copyCandidateSource(sourceUrl) {
   renderCandidates();
 }
 
-function resetLocalData() {
+async function resetLocalData() {
   localStorageKeys.forEach((key) => {
     try {
       localStorage.removeItem(key);
@@ -2157,6 +2847,9 @@ function resetLocalData() {
   state.intensity = 'all';
   state.favoritesOnly = false;
   state.sensorAutoReconnectAttempted = false;
+  heartRateSession.autoReconnectAttempted = false;
+  heartRateSession.maximum = null;
+  heartRateSession.showZones = true;
 
   elements.searchInput.value = '';
   elements.durationFilter.value = 'all';
@@ -2173,9 +2866,8 @@ function resetLocalData() {
     renderCatalog();
   }
 
-  disconnectSensor({ clearSaved: true }).catch(() => {
-    // Errors while disconnecting should not block local reset feedback.
-  });
+  await disconnectSensor({ clearSaved: true });
+  await disconnectHeartRate({ clearSaved: true });
   renderSensorPanel();
   setAppStatus(t('reset_success'));
 }
@@ -2257,12 +2949,46 @@ function bindEvents() {
       setSensorStatus('disconnected');
     });
   });
+  elements.connectHeartRateButton.addEventListener('click', () => {
+    connectHeartRateFromPicker();
+  });
+  elements.reconnectHeartRateButton.addEventListener('click', () => {
+    reconnectSavedHeartRate();
+  });
+  elements.disconnectHeartRateButton.addEventListener('click', () => {
+    disconnectHeartRate().catch(() => {
+      setHeartRateStatus('error', t('heart_rate_status_error'));
+    });
+  });
+  elements.forgetHeartRateButton.addEventListener('click', () => {
+    disconnectHeartRate({ clearSaved: true }).catch(() => {
+      clearStoredHeartRateDevice();
+      setHeartRateStatus('disconnected');
+    });
+  });
+  elements.saveHeartRateMaxButton.addEventListener('click', saveHeartRateMaximumFromInput);
+  elements.clearHeartRateMaxButton.addEventListener('click', clearHeartRateMaximum);
+  elements.heartRateMaxInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    saveHeartRateMaximumFromInput();
+  });
+  elements.heartRateShowZonesInput.addEventListener('change', (event) => {
+    heartRateSession.showZones = event.target.checked;
+    saveStoredHeartRateZonePreferences();
+    renderSensorPanel();
+  });
   elements.installButton.addEventListener('click', installApp);
   elements.exportDataButton.addEventListener('click', downloadLocalBackup);
   elements.copyDataButton.addEventListener('click', copyLocalBackup);
   elements.exportReviewDecisionsButton.addEventListener('click', copyReviewDecisions);
   elements.importDataInput.addEventListener('change', (event) => importLocalBackup(event.target.files[0]));
-  elements.resetDataButton.addEventListener('click', resetLocalData);
+  elements.resetDataButton.addEventListener('click', () => {
+    resetLocalData().catch((error) => {
+      console.error(error);
+      setAppStatus(t('reset_failed'));
+    });
+  });
   elements.favoriteRouteButton.addEventListener('click', () => {
     if (state.selectedRoute) toggleFavorite(state.selectedRoute.id);
   });
@@ -2303,6 +3029,7 @@ function bindEvents() {
   document.addEventListener('fullscreenchange', updateFullscreenButton);
   document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
   document.addEventListener('keydown', (event) => {
+    trapSensorFullscreenFocus(event);
     if (event.key === 'Escape' && elements.selectedLayout?.classList.contains('sensor-fullscreen-modal')) {
       exitPwaFullscreen();
     }
@@ -2453,15 +3180,27 @@ async function init() {
   bindLangSwitcher();
   loadLocalState();
   bindEvents();
+  loadHeartRateRecommendations();
   startDebugSensor();
+  startDebugHeartRate();
   renderSensorPanel();
   setupCompactControls();
   if (navigator.onLine === false) setConnectivityStatus(t('offline_ready'));
   loadCatalog();
-  autoReconnectSavedSensor().catch((error) => {
+  try {
+    await autoReconnectSavedSensor();
+  } catch (error) {
     const message = error?.message ? t('sensor_status_error_with_detail', { message: error.message }) : t('sensor_status_error');
     setSensorStatus('error', message);
-  });
+  }
+  try {
+    await autoReconnectSavedHeartRate();
+  } catch (error) {
+    const message = error?.message
+      ? t('heart_rate_status_error_with_detail', { message: error.message })
+      : t('heart_rate_status_error');
+    setHeartRateStatus('error', message);
+  }
   applyReviewModeFromUrl();
   registerServiceWorker();
 }

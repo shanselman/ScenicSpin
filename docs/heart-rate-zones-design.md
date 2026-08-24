@@ -1,6 +1,6 @@
 # Heart Rate Zones — Testing-Branch Design
 
-Status: approved direction; implementation research in progress  
+Status: implemented on the testing branch; automated validation complete, real-device follow-up pending
 Branch: `feature/heart-rate-zones-testing`  
 Recorded: 2026-08-24
 
@@ -20,7 +20,7 @@ The experience must remain useful without any sensor, purchase, profile, or zone
 3. **Inclusive and accessible.** Every zone is represented by text/number as well as color. Copy avoids assumptions about ability, fitness, identity, goals, or equipment.
 4. **Local and private.** Sensor choices and zone settings stay in browser-local storage. Live readings are not uploaded or added to third-party URLs.
 5. **Optional commerce.** Hardware recommendations are secondary help, never required or presented as the only path. Free/existing-device choices are listed first where appropriate.
-6. **Transparent affiliate links.** Amazon recommendations use Scott's existing associate tag, `diabeticbooks`, with a clear nearby disclosure and `rel="sponsored noopener"`.
+6. **Transparent affiliate links.** Amazon recommendations use Scott's existing associate tag, `diabeticbooks`, with a clear nearby disclosure and `rel="sponsored nofollow noopener"`.
 7. **Progressive enhancement.** Unsupported browsers retain the normal ScenicSpin experience and receive clear compatibility help.
 
 ## Bluetooth architecture
@@ -48,7 +48,7 @@ The HRS parser must support both 8-bit and 16-bit BPM values from the characteri
 - **HeartCast** is the free bridge option: Watch → iPhone → standard BLE HRS → PedalScape/BeltScape on a different computer/tablet device.
 - HeartCast cannot feed a web app on the same iPhone.
 - Native iOS/iPadOS Safari and installed PWAs do not support Web Bluetooth; this limitation must be explained without implying user error.
-- Optional chest/arm-strap recommendations will be selected only after current product and ASIN verification. Current candidates: CooSpo H808S, Polar H9, Polar H10, and possibly Polar Verity Sense.
+- Optional chest/arm-strap examples use the user-verified products and ASINs listed below.
 
 ## Zone model
 
@@ -109,9 +109,16 @@ Recommendations must live in shared source data so both generated sites render t
 
 Disclosure near the links:
 
-> As an Amazon Associate, I earn from qualifying purchases. A heart-rate monitor is optional; ScenicSpin works without one.
+> As an Amazon Associate I earn from qualifying purchases. The links are paid affiliate links, and a monitor is optional.
 
-Do not use price claims that can become stale unless fetched dynamically through an approved Amazon API. Do not claim medical accuracy, universal compatibility, or endorsement by Amazon/manufacturers.
+Every Amazon link opens in a new tab with `rel="sponsored nofollow noopener"`. Do not use price claims that can become stale unless fetched dynamically through an approved Amazon API. Do not claim medical accuracy, universal compatibility, or endorsement by Amazon/manufacturers.
+
+Verified US Amazon examples:
+
+- CooSpo H808S — `B0FCY41J5N`; standard BLE chest strap, with dual-BLE capability not confirmed.
+- Polar H9 — `B08GHH4ZKL`; manufacturer specifies one Bluetooth connection at a time.
+- Polar H10 — `B0F69ZP1D8`; manufacturer confirms two simultaneous Bluetooth connections.
+- Polar Verity Sense — `B0F1HY5HGT`; manufacturer confirms two simultaneous Bluetooth connections.
 
 ## Storage and backup
 
@@ -146,6 +153,19 @@ Before reporting complete:
 5. Inspect generated PedalScape and BeltScape output
 6. Review branch diff for privacy, disclosure, and accidental main-branch changes
 7. Commit everything only on `feature/heart-rate-zones-testing`
+
+## Implementation notes
+
+- `src/heart-rate.js` owns the pure standard-HRS parser and percentage-zone classifier used by both generated sites.
+- `src/app.js` keeps cadence and heart-rate device, characteristic, notification, freshness, debug, reconnect, and teardown paths independent. PedalScape can run both sessions together; BeltScape exposes only heart rate.
+- `data/heart-rate-monitors.json` is the shared recommendation source for both builds.
+- Heart-rate device metadata, the user-entered maximum, and the zone-display preference are local and backup-compatible. Live BPM and measurement history are neither stored nor exported.
+- Debug heart rate is available on both builds with `?debugHeartRate=150`; PedalScape can combine it with `?debugSensor=1`.
+- Shell caches were advanced to PedalScape v14 and BeltScape v10.
+
+## Manual real-device follow-up
+
+Validate one standard BLE chest strap and the HeartCast Watch → iPhone → different-device bridge on supported browsers, including simultaneous cadence plus heart rate on PedalScape. This implementation has not been claimed as real-hardware validated.
 
 ## Primary references
 

@@ -5,8 +5,9 @@
   "description": "Static scenic cycling route catalog and fullscreen ride player.",
   "scripts": {
     "start": "node scripts/serve-dist.js pedalscape 5173",
-    "check": "node --check src/app.js && node --check scripts/build.js && node --check scripts/test-site.js && node --check scripts/validate-data.js && node --check scripts/serve-dist.js && npm run validate",
+    "check": "node --check src/app.js && node --check src/heart-rate.js && node --check scripts/build.js && node --check scripts/test-site.js && node --check scripts/validate-data.js && node --check scripts/serve-dist.js && npm run validate",
     "validate": "node scripts/validate-data.js",
+    "test:unit": "node --test tests/heart-rate-helpers.test.js",
     "test:e2e": "playwright test",
     "build:pedalscape": "node scripts/build.js pedalscape",
     "build:beltscape": "node scripts/build.js beltscape",
@@ -15,7 +16,7 @@
     "preview:beltscape": "node scripts/serve-dist.js beltscape 5174",
     "test:pedalscape": "node scripts/test-site.js pedalscape",
     "test:beltscape": "node scripts/test-site.js beltscape",
-    "test:all": "npm run test:pedalscape && npm run test:beltscape"
+    "test:all": "npm run test:unit && npm run test:pedalscape && npm run test:beltscape"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.0"

@@ -185,28 +185,97 @@
             </div>
           </aside>
 
-          <section id="sensorPanel" class="sensor-panel" aria-labelledby="sensorTitle" hidden>
+          <section id="sensorPanel" class="sensor-panel" aria-labelledby="sensorPanelTitle" hidden>
             <div class="sensor-panel-heading">
-              <p class="eyebrow" data-i18n="sensor_eyebrow">Cadence sensor</p>
-              <h4 id="sensorTitle" data-i18n="sensor_title">Bluetooth cadence</h4>
+              <p class="eyebrow" data-i18n="sensors_eyebrow">Live sensors</p>
+              <h4 id="sensorPanelTitle" data-i18n="sensors_title">Bluetooth activity sensors</h4>
             </div>
-            <p id="sensorConnectionStatus" class="sensor-status" role="status" aria-live="polite" data-i18n="sensor_status_idle">Connect a cadence sensor to start.</p>
-            <dl class="sensor-summary">
-              <div>
-                <dt data-i18n="sensor_saved_label">Saved sensor</dt>
-                <dd id="sensorSavedDevice" data-i18n="sensor_saved_none">None</dd>
-              </div>
-              <div>
-                <dt data-i18n="sensor_cadence_label">Current cadence</dt>
-                <dd id="sensorCadenceValue" data-i18n="sensor_cadence_placeholder">-- rpm</dd>
-              </div>
-            </dl>
-            <div class="sensor-actions">
-              <button id="connectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_connect_button">Connect sensor</button>
-              <button id="reconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_reconnect_button">Reconnect saved sensor</button>
-              <button id="disconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_disconnect_button">Disconnect</button>
-              <button id="forgetSensorButton" class="secondary-button compact-button danger-button" type="button" data-i18n="sensor_forget_button">Forget saved sensor</button>
+            <div class="sensor-grid">
+              <section id="cadenceSensorCard" class="sensor-card" aria-labelledby="sensorTitle" hidden>
+                <div class="sensor-card-heading">
+                  <p class="eyebrow" data-i18n="sensor_eyebrow">Cadence sensor</p>
+                  <h4 id="sensorTitle" data-i18n="sensor_title">Bluetooth cadence</h4>
+                </div>
+                <p id="sensorConnectionStatus" class="sensor-status" role="status" aria-live="polite" data-i18n="sensor_status_idle">Connect a cadence sensor to start.</p>
+                <dl class="sensor-summary">
+                  <div>
+                    <dt data-i18n="sensor_saved_label">Saved sensor</dt>
+                    <dd id="sensorSavedDevice" data-i18n="sensor_saved_none">None</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="sensor_cadence_label">Current cadence</dt>
+                    <dd id="sensorCadenceValue" data-i18n="sensor_cadence_placeholder">-- rpm</dd>
+                  </div>
+                </dl>
+                <div class="sensor-actions">
+                  <button id="connectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_connect_button">Connect sensor</button>
+                  <button id="reconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_reconnect_button">Reconnect saved sensor</button>
+                  <button id="disconnectSensorButton" class="secondary-button compact-button" type="button" data-i18n="sensor_disconnect_button">Disconnect</button>
+                  <button id="forgetSensorButton" class="secondary-button compact-button danger-button" type="button" data-i18n="sensor_forget_button">Forget saved sensor</button>
+                </div>
+              </section>
+
+              <section id="heartRateSensorCard" class="sensor-card heart-rate-card" aria-labelledby="heartRateTitle">
+                <div class="sensor-card-heading">
+                  <p class="eyebrow" data-i18n="heart_rate_eyebrow">Heart-rate monitor</p>
+                  <h4 id="heartRateTitle" data-i18n="heart_rate_title">Bluetooth heart rate</h4>
+                </div>
+                <p id="heartRateConnectionStatus" class="sensor-status" role="status" aria-live="polite" data-i18n="heart_rate_status_idle">Connect a standard Bluetooth heart-rate monitor to start.</p>
+                <dl class="sensor-summary heart-rate-summary">
+                  <div>
+                    <dt data-i18n="heart_rate_saved_label">Saved monitor</dt>
+                    <dd id="heartRateSavedDevice" data-i18n="heart_rate_saved_none">None</dd>
+                  </div>
+                  <div>
+                    <dt data-i18n="heart_rate_bpm_label">Current heart rate</dt>
+                    <dd id="heartRateBpmValue" data-i18n="heart_rate_bpm_placeholder">-- bpm</dd>
+                  </div>
+                  <div class="heart-rate-zone-reading" data-zone="none">
+                    <dt data-i18n="heart_rate_zone_label">Current zone</dt>
+                    <dd id="heartRateZoneValue" data-i18n="heart_rate_zone_unavailable">Set a maximum to show zones</dd>
+                  </div>
+                </dl>
+                <div class="heart-rate-settings">
+                  <label for="heartRateMaxInput">
+                    <span data-i18n="heart_rate_max_label">Known maximum heart rate (optional)</span>
+                    <input id="heartRateMaxInput" type="number" min="30" max="300" step="1" inputmode="numeric" aria-describedby="heartRateMaxHelp heartRateMaxStatus">
+                  </label>
+                  <p id="heartRateMaxHelp" class="sensor-help" data-i18n="heart_rate_max_help">Enter your own known maximum to calculate zones. BPM works without it.</p>
+                  <div class="sensor-actions heart-rate-setting-actions">
+                    <button id="saveHeartRateMaxButton" class="secondary-button compact-button" type="button" data-i18n="heart_rate_max_save">Save maximum</button>
+                    <button id="clearHeartRateMaxButton" class="secondary-button compact-button" type="button" data-i18n="heart_rate_max_clear">Clear maximum</button>
+                  </div>
+                  <label class="toggle-field heart-rate-zone-toggle">
+                    <input id="heartRateShowZonesInput" type="checkbox" checked>
+                    <span data-i18n="heart_rate_show_zones">Show zone text when a maximum is set</span>
+                  </label>
+                  <p id="heartRateMaxStatus" class="sensor-status sensor-setting-status" role="status" aria-live="polite"></p>
+                </div>
+                <div class="sensor-actions">
+                  <button id="connectHeartRateButton" class="secondary-button compact-button" type="button" data-i18n="heart_rate_connect_button">Connect monitor</button>
+                  <button id="reconnectHeartRateButton" class="secondary-button compact-button" type="button" data-i18n="heart_rate_reconnect_button">Reconnect saved monitor</button>
+                  <button id="disconnectHeartRateButton" class="secondary-button compact-button" type="button" data-i18n="heart_rate_disconnect_button">Disconnect</button>
+                  <button id="forgetHeartRateButton" class="secondary-button compact-button danger-button" type="button" data-i18n="heart_rate_forget_button">Forget saved monitor</button>
+                </div>
+              </section>
             </div>
+
+            <details class="heart-rate-help">
+              <summary data-i18n="heart_rate_help_summary">Heart-rate setup, privacy, and optional monitors</summary>
+              <div class="heart-rate-help-content">
+                <p data-i18n="heart_rate_help_zones">Zone systems vary. These five zones use percentages of a maximum you enter: 50–59%, 60–69%, 70–79%, 80–89%, and 90–100%, with clear labels below and above that range. This is informational, not medical advice.</p>
+                <p data-i18n="heart_rate_help_standard_ble">Use a standard Bluetooth Low Energy monitor that exposes the Heart Rate Service. Chrome or Edge on desktop and supported Android browsers can use Web Bluetooth. Native iPhone and iPad browsers, including installed PWAs, do not currently support it.</p>
+                <p data-i18n="heart_rate_help_heartcast">For Apple Watch, the free HeartCast app can bridge Watch → iPhone → Bluetooth heart rate to this site on a different supported computer or tablet. It cannot connect back to a web app on the same iPhone.</p>
+                <p data-i18n="heart_rate_help_privacy">Monitor details, your maximum, and zone preference stay in this browser. Live BPM and measurement history are not stored or exported.</p>
+                <p data-i18n="heart_rate_help_existing">A monitor is optional. Use one you already own, use the free HeartCast path when it fits, or enjoy the scenic player without heart-rate data.</p>
+                <section class="heart-rate-recommendations" aria-labelledby="heartRateRecommendationsTitle">
+                  <h5 id="heartRateRecommendationsTitle" data-i18n="heart_rate_recommendations_title">Optional monitor examples</h5>
+                  <p class="affiliate-disclosure"><strong>As an Amazon Associate I earn from qualifying purchases.</strong> <span data-i18n="heart_rate_affiliate_detail">These are paid affiliate links, and a monitor is optional.</span></p>
+                  <ul id="heartRateProductList" class="heart-rate-product-list"></ul>
+                  <p id="heartRateProductsStatus" class="sensor-status" role="status" aria-live="polite"></p>
+                </section>
+              </div>
+            </details>
           </section>
         </article>
       </section>
@@ -276,6 +345,7 @@
       </div>
     </footer>
 
+    <script src="src/heart-rate.js?v={{SHELL_VERSION}}"></script>
     <script src="src/app.js?v={{SHELL_VERSION}}"></script>
   </body>
 </html>

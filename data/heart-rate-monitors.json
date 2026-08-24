@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "products": [
+    {
+      "name": "CooSpo H808S",
+      "asin": "B0FCY41J5N",
+      "formFactorKey": "heart_rate_product_chest_strap",
+      "connectionKey": "heart_rate_product_coospo_connection",
+      "amazonUrl": "https://www.amazon.com/dp/B0FCY41J5N?tag=diabeticbooks"
+    },
+    {
+      "name": "Polar H9",
+      "asin": "B08GHH4ZKL",
+      "formFactorKey": "heart_rate_product_chest_strap",
+      "connectionKey": "heart_rate_product_h9_connection",
+      "amazonUrl": "https://www.amazon.com/dp/B08GHH4ZKL?tag=diabeticbooks"
+    },
+    {
+      "name": "Polar H10",
+      "asin": "B0F69ZP1D8",
+      "formFactorKey": "heart_rate_product_chest_strap",
+      "connectionKey": "heart_rate_product_h10_connection",
+      "amazonUrl": "https://www.amazon.com/dp/B0F69ZP1D8?tag=diabeticbooks"
+    },
+    {
+      "name": "Polar Verity Sense",
+      "asin": "B0F1HY5HGT",
+      "formFactorKey": "heart_rate_product_arm_band",
+      "connectionKey": "heart_rate_product_verity_connection",
+      "amazonUrl": "https://www.amazon.com/dp/B0F1HY5HGT?tag=diabeticbooks"
+    }
+  ]
+}
