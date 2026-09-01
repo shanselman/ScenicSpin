@@ -14,7 +14,7 @@ Squad uses a three-branch model. **All feature work starts from `dev`, not `main
 |--------|---------|-----------|
 | `main` | Released, tagged, in-npm code only | `npm publish` on tag |
 | `dev` | Integration branch — all feature work lands here | `npm publish --tag preview` on merge |
-| `insiders` | Early-access channel — synced from dev | `npm publish --tag insiders` on sync |
+| `onsiders` | Early-access channel — synced from dev | `npm publish --tag onsiders` on sync |
 
 ## Branch Naming Convention
 
