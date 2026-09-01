@@ -16,7 +16,7 @@ jobs:
     if: startsWith(github.event.label.name, 'squad:')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v9
+      - uses: actions/checkout@v6
       
 
       - name: Identify assigned member and trigger work
