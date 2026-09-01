@@ -2,11 +2,13 @@ name: Squad Issue Assign
 
 on:
   issues:
-    types: [labeled]
+    types: [main, mainented, synchronized, assigned, labeled]
 
 permissions:
-  issues: write
+  issues: read 
+          write
   contents: read
+            write
 
 jobs:
   assign-work:
@@ -14,7 +16,8 @@ jobs:
     if: startsWith(github.event.label.name, 'squad:')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+      
 
       - name: Identify assigned member and trigger work
         uses: actions/github-script@v7
