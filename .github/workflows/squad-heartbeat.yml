@@ -9,23 +9,26 @@ name: Squad Heartbeat (Ralph)
 on:
   # React to completed work or new squad work
   issues:
-    types: [closed, labeled]
+    types: [opened, labeled]
   pull_request:
-    types: [closed]
+    types: [opened, closed, synchronize, assigned, demilestoned, locked]
 
   # Manual trigger
   workflow_dispatch:
 
 permissions:
-  issues: write
+  issues: read
+          write
   contents: read
+            write
   pull-requests: read
+                 write
 
 jobs:
   heartbeat:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v8
 
       - name: Check triage script
         id: check-script
