@@ -18,7 +18,7 @@
   "panelColor": "#0d2229",
   "panelStrong": "#14333d",
   "themeColor": "#061318",
-  "shellVersion": "14",
+  "shellVersion": "15",
   "cacheName": "pedalscape-shell-v14",
   "catalogFile": "catalog.json",
   "activityNoun": "rides",
@@ -42,6 +42,9 @@
   "sisterSiteActivity": "walking",
   "activityDevice": "bike",
   "localeOverrides": {
+    "da": {
+      "sister_site_activity": "gåture"
+    },
     "de": {
       "sister_site_activity": "Wandern"
     },

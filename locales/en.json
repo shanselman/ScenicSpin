@@ -64,7 +64,7 @@
   "catalog_empty_detail": "Add entries to routes/catalog.json to populate the catalog.",
   "catalog_empty_count": "0 {{activity_noun_plural}}",
   "catalog_result_count_one": "1 {{activity_noun_singular}}",
-  "catalog_result_count_other": "{{count}} {{activity_noun_singular}}s",
+  "catalog_result_count_other": "{{count}} {{activity_noun_plural}}",
   "catalog_no_match": "No routes match these filters.",
   "catalog_no_match_detail": "Try a different duration, scenery, intensity, or search term.",
   "catalog_clear_filters": "Clear filters",

@@ -1,7 +1,6 @@
 const { test, expect } = require('@playwright/test');
 const { siteConfig } = require('../playwright.config');
-const ACTIVITY_NOUN = siteConfig.activityNounSingular;    // 'ride' or 'walk'
-const ACTIVITY_NOUN_S = siteConfig.activityNounSingular;
+const DANISH_ACTIVITY_NOUN_PLURAL = siteConfig.siteSlug === 'pedalscape' ? 'ture' : 'gåture';
 
 
 test.use({ serviceWorkers: 'allow' });
@@ -29,9 +28,11 @@ async function waitForServiceWorkerControl(page) {
 
 test('service worker keeps the app shell and route data usable offline', async ({ page, context }) => {
   test.skip(!!process.env.CI, 'SW offline lifecycle unreliable in headless CI — tested locally only');
+  await page.addInitScript(() => localStorage.setItem('lang', 'da'));
   await page.goto('/', { waitUntil: 'networkidle' });
-  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${ACTIVITY_NOUN}s?$`));
+  await expect(page.locator('#resultCount')).toHaveText(new RegExp(`^\\d+ ${DANISH_ACTIVITY_NOUN_PLURAL}$`));
   await expect(page.locator('.route-card').first()).toBeVisible();
+  await expect(page.locator('#filterTitle')).toHaveText('Søg og filtrer');
 
   await waitForServiceWorkerControl(page);
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker?.controller))).toBeTruthy();
@@ -43,8 +44,9 @@ test('service worker keeps the app shell and route data usable offline', async (
   await expect.poll(
     () => page.locator('#resultCount').textContent(),
     { timeout: 20000, intervals: [500, 1000, 2000] }
-  ).toMatch(new RegExp(`^\\d+ ${ACTIVITY_NOUN}s?$`));
+  ).toMatch(new RegExp(`^\\d+ ${DANISH_ACTIVITY_NOUN_PLURAL}$`));
   await expect(page.locator('.route-card').first()).toBeVisible();
+  await expect(page.locator('#filterTitle')).toHaveText('Søg og filtrer');
 
   await context.setOffline(false);
 });

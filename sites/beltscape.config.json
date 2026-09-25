@@ -18,7 +18,7 @@
   "panelColor": "#0d1929",
   "panelStrong": "#14283d",
   "themeColor": "#060d18",
-  "shellVersion": "10",
+  "shellVersion": "11",
   "cacheName": "beltscape-shell-v10",
   "catalogFile": "beltscape-catalog.json",
   "activityNoun": "walks",
@@ -42,6 +42,17 @@
   "sisterSiteActivity": "cycling",
   "activityDevice": "treadmill",
   "localeOverrides": {
+    "da": {
+      "activity_noun_singular": "gåtur",
+      "activity_noun_plural": "gåture",
+      "activity_noun_singular_cap": "Gåtur",
+      "activity_noun_plural_cap": "Gåture",
+      "activity_verb": "gang",
+      "activity_verb_cap": "Gang",
+      "activity_device": "løbebånd",
+      "sister_site_activity": "cykling",
+      "site_tagline": "Ethvert {{activity_device}}. Enhver skærm. Smukke {{activity_noun_plural}} hjemmefra."
+    },
     "de": {
       "activity_noun_singular": "Wanderung",
       "activity_noun_plural": "Wanderungen",
@@ -52,7 +63,7 @@
       "activity_device": "Laufband",
       "sister_site_activity": "Radfahren",
       "footer_title": "{{site_name}} hält das Wandern einfach.",
-      "catalog_result_count_other": "{{count}} Wanderungen"
+      "catalog_result_count_other": "{{count}} {{activity_noun_plural}}"
     },
     "es": {
       "activity_noun_singular": "caminata",

@@ -55,7 +55,7 @@ const candidateDecisionLabels = {
 
 let i18n = {};
 
-const supportedLocales = ['en', 'de', 'es', 'fr', 'it', 'tr', 'zh-TW', 'zh-CN'];
+const supportedLocales = ['en', 'da', 'de', 'es', 'fr', 'it', 'tr', 'zh-TW', 'zh-CN'];
 
 function resolveLocale(preferredLocales) {
   for (const locale of preferredLocales) {

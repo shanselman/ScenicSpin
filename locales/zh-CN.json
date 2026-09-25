@@ -14,7 +14,7 @@
   "sister_site_emoji": "",
   "skip_link": "跳到播放器",
   "hero_eyebrow": "室内{{activity_device}} + 沉浸式风景",
-  "hero_copy": "挑选一条精选风景{{activity_verb}}路线，然后在笔记本电脑、平板或电视上全屏播放。",
+  "hero_copy": "挑选一条精选风景{{activity_verb}}路线，然后在笔记本电脑、平板或电视上全屏播放这段{{activity_noun_singular}}视频。",
   "hero_label_loading": "正在加载{{activity_noun_singular}}路线目录",
   "hero_selection_default": "请在下方选择路线",
   "hero_start_button": "开始这条{{activity_noun_singular}}",

@@ -106,6 +106,37 @@ test('Chinese locales are available from the language switcher', async ({ page, 
   await expect(page.locator('.lang-switcher [data-lang="zh-TW"]')).not.toHaveAttribute('aria-current', 'true');
 });
 
+test('Danish locale is selectable and detected from the browser locale', async ({ page, request }) => {
+  const danish = await request.get('/locales/da.json');
+  expect(danish.ok()).toBeTruthy();
+  const danishJson = await danish.json();
+  expect(danishJson.filter_title).toBe('Søg og filtrer');
+
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'languages', {
+      configurable: true,
+      get: () => ['da-DK', 'en-US']
+    });
+    Object.defineProperty(navigator, 'language', {
+      configurable: true,
+      get: () => 'da-DK'
+    });
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('html')).toHaveAttribute('lang', 'da');
+  await expect(page.locator('#filterTitle')).toHaveText('Søg og filtrer');
+  await expect(page.locator('.lang-switcher')).toHaveAttribute('aria-label', 'Sprog');
+  await expect(page.locator('.lang-switcher [data-lang="da"]')).toHaveClass(/active-lang/);
+  await expect(page.locator('.lang-switcher [data-lang="da"]')).toHaveAttribute('aria-current', 'true');
+
+  await page.locator('.lang-switcher [data-lang="en"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await page.locator('.lang-switcher [data-lang="da"]').click();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'da');
+  await expect(page.locator('#filterTitle')).toHaveText('Søg og filtrer');
+});
+
 test('Traditional Chinese browser locale variants with multiple underscores resolve to zh-TW', async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'languages', {
