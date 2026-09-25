@@ -64,7 +64,7 @@
   "catalog_empty_detail": "Füge Einträge zu routes/catalog.json hinzu, um den Katalog zu befüllen.",
   "catalog_empty_count": "0 {{activity_noun_plural}}",
   "catalog_result_count_one": "1 {{activity_noun_singular}}",
-  "catalog_result_count_other": "{{count}} {{activity_noun_singular}}en",
+  "catalog_result_count_other": "{{count}} {{activity_noun_plural}}",
   "catalog_no_match": "Es passen keine Strecken zum Filter.",
   "catalog_no_match_detail": "Versuche eine andere Dauer, Landschaft, Intensität oder einen anderen Suchbegriff.",
   "catalog_clear_filters": "Filter leeren",

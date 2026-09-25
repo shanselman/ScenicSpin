@@ -14,7 +14,7 @@
   "sister_site_emoji": "",
   "skip_link": "跳到播放器",
   "hero_eyebrow": "室內{{activity_device}} + 沉浸式風景",
-  "hero_copy": "挑選一條精選風景{{activity_verb}}路線，接著在筆電、平板或電視上全螢幕播放。",
+  "hero_copy": "挑選一條精選風景{{activity_verb}}路線，接著在筆電、平板或電視上全螢幕播放這段{{activity_noun_singular}}影片。",
   "hero_label_loading": "正在載入{{activity_noun_singular}}路線目錄",
   "hero_selection_default": "請在下方選擇路線",
   "hero_start_button": "開始這趟{{activity_noun_singular}}",

@@ -12,6 +12,7 @@ const shellAssets = [
   './routes/catalog.json',
   './routes/candidate-backlog.json',
   './locales/en.json',
+  './locales/da.json',
   './locales/de.json',
   './locales/es.json',
   './locales/fr.json',

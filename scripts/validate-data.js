@@ -216,7 +216,51 @@ function validateLocales() {
       if (key in locale && typeof locale[key] !== typeof english[key]) {
         errors.push(`${relativePath}: key ${key} must be ${typeof english[key]}`);
       }
+
+      if (key in locale && typeof locale[key] === 'string' && typeof english[key] === 'string') {
+        const expectedPlaceholders = [...english[key].matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]).sort();
+        const actualPlaceholders = [...locale[key].matchAll(/\{\{(\w+)\}\}/g)].map((match) => match[1]).sort();
+        if (JSON.stringify(actualPlaceholders) !== JSON.stringify(expectedPlaceholders)) {
+          errors.push(
+            `${relativePath}: key ${key} placeholders must match en.json ` +
+            `(${expectedPlaceholders.join(', ') || 'none'}; found ${actualPlaceholders.join(', ') || 'none'})`
+          );
+        }
+      }
     }
+  }
+
+  const expectedLocales = localeFiles.map((file) => file.replace(/\.json$/, '')).sort();
+  const appSource = fs.readFileSync(path.join(root, 'src', 'app.js'), 'utf8');
+  const supportedMatch = appSource.match(/const supportedLocales = \[([^\]]*)\]/s);
+  if (!supportedMatch) {
+    errors.push('src/app.js: supportedLocales list not found');
+  }
+
+  const localeSurfaces = [
+    {
+      label: 'src/app.js supportedLocales',
+      locales: supportedMatch ? [...supportedMatch[1].matchAll(/['"]([^'"]+)['"]/g)].map((match) => match[1]) : []
+    },
+    {
+      label: 'index.html language switcher',
+      locales: [...fs.readFileSync(path.join(root, 'index.html'), 'utf8').matchAll(/data-lang="([^"]+)"/g)]
+        .map((match) => match[1])
+    },
+    {
+      label: 'service-worker.js locale pre-cache',
+      locales: [...fs.readFileSync(path.join(root, 'service-worker.js'), 'utf8').matchAll(/['"]\.\/locales\/([^'"]+)\.json['"]/g)]
+        .map((match) => match[1])
+    }
+  ];
+
+  for (const { label, locales } of localeSurfaces) {
+    const actualLocales = [...new Set(locales)].sort();
+    const missing = expectedLocales.filter((locale) => !actualLocales.includes(locale));
+    const extra = actualLocales.filter((locale) => !expectedLocales.includes(locale));
+    if (missing.length > 0) errors.push(`${label}: missing locales: ${missing.join(', ')}`);
+    if (extra.length > 0) errors.push(`${label}: unknown locales: ${extra.join(', ')}`);
+    if (actualLocales.length !== locales.length) errors.push(`${label}: duplicate locale entries found`);
   }
 }
 
