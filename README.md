@@ -10,7 +10,7 @@
   <img alt="No backend" src="https://img.shields.io/badge/Backend-none-555">
   <img alt="Local first" src="https://img.shields.io/badge/Storage-localStorage-2d7fc1">
   <img alt="Build" src="https://img.shields.io/badge/Build-Node.js%20(zero%20deps)-339933?logo=node.js&logoColor=white">
-  <img alt="i18n" src="https://img.shields.io/badge/i18n-8%20languages-38e8a4?labelColor=062017">
+  <img alt="i18n" src="https://img.shields.io/badge/i18n-9%20languages-38e8a4?labelColor=062017">
   <img alt="Tests" src="https://img.shields.io/badge/Tested%20with-Playwright-2EAD33?logo=playwright&logoColor=white">
   <img alt="Deploy" src="https://img.shields.io/badge/Deploy-GitHub%20Pages-222?logo=githubpages&logoColor=white">
   <img alt="License" src="https://img.shields.io/badge/License-MIT-blue">
@@ -43,7 +43,7 @@ ScenicSpin ships as two independent, white‑labeled sites built from the same t
 - **Favorites & history** — Star routes and resume recent activity. Stored in `localStorage` on your device only.
 - **Installable PWA** — Add to your home screen; the app shell works offline thanks to a service worker.
 - **Privacy‑friendly embeds** — Videos use `youtube-nocookie.com` and link/embed official public streams only (never downloaded or rehosted).
-- **8 languages** — English, German, Spanish, French, Italian, Turkish, Traditional Chinese, and Simplified Chinese, with runtime `{{token}}` substitution.
+- **9 languages** — English, Danish, German, Spanish, French, Italian, Turkish, Traditional Chinese, and Simplified Chinese, with runtime `{{token}}` substitution.
 - **Filter & search** — Browse routes by scenery, terrain, difficulty, and duration.
 - **Bluetooth cadence (PedalScape)** — Pair a CSC cadence sensor, reconnect to the saved device, and see live RPM while riding.
 
@@ -53,19 +53,47 @@ ScenicSpin ships as two independent, white‑labeled sites built from the same t
 
 ScenicSpin is a **template + token** system. The repo root holds shared source templates with `{{TOKEN}}` placeholders. A small Node.js build script reads a per‑site config, substitutes the tokens, injects localized vocabulary, copies the right catalog and icons, and emits a fully static site into `dist/<site>/`.
 
-```
-                 sites/pedalscape.config.json ─┐
-                 sites/beltscape.config.json  ─┤
-                                               ▼
-  index.html ─┐                       ┌──────────────────┐         dist/pedalscape/  ──▶ pedalscape.com
-  src/app.js  ├─ {{TOKENS}} ─────────▶│  scripts/build.js │──────▶
-  styles.css  │                       │  (token inject +  │         dist/beltscape/   ──▶ beltscape.com
-  service-    │                       │   locale merge +  │
-   worker.js  │                       │   asset copy)     │
-  manifest    ┘                       └──────────────────┘
-  locales/*.json
-  routes/*catalog.json
-  icons/<site>/
+```mermaid
+flowchart LR
+    subgraph templates["📄 Shared templates"]
+        direction TB
+        T1["index.html"]
+        T2["src/app.js · src/styles.css"]
+        T3["service-worker.js"]
+        T4["manifest.webmanifest"]
+    end
+
+    subgraph data["🗂️ Shared data"]
+        direction TB
+        D1["locales/*.json<br/>9 languages"]
+        D2["routes/*catalog.json"]
+        D3["icons/&lt;site&gt;/ · assets/"]
+    end
+
+    subgraph configs["⚙️ Site configs"]
+        direction TB
+        C1["sites/pedalscape.config.json"]
+        C2["sites/beltscape.config.json"]
+    end
+
+    B{{"🛠️ scripts/build.js<br/>token inject · locale merge · asset copy"}}
+
+    templates -- "{{TOKENS}}" --> B
+    data --> B
+    configs --> B
+
+    B --> P["📦 dist/pedalscape/"]
+    B --> W["📦 dist/beltscape/"]
+
+    P --> PS(["🚴 pedalscape.com"])
+    W --> BS(["🚶 beltscape.com"])
+
+    classDef build fill:#1f2937,stroke:#38e8a4,stroke-width:2px,color:#fff
+    classDef pedal fill:#38e8a4,stroke:#062017,color:#062017
+    classDef belt fill:#4d9de0,stroke:#0b2a45,color:#fff
+    class B build
+    class P,PS pedal
+    class W,BS belt
 ```
 
 Because there is no runtime backend, the build's only job is to produce static files. GitHub Actions then pushes each `dist/<site>/` into its own deploy repo, which serves via GitHub Pages.
@@ -82,12 +110,12 @@ ScenicSpin/
 ├── src/
 │   ├── app.js                 # Main app logic (catalog, player, favorites, i18n, filters)
 │   └── styles.css             # Styles (accent color driven by tokens)
-├── locales/                   # i18n source files (~164 keys each)
+├── locales/                   # i18n source files (~208 keys each)
 │   ├── en.json                #   English (source of truth)
+│   ├── da.json  de.json
 │   ├── es.json  fr.json
 │   ├── it.json  tr.json
-│   ├── de.json
-│   ├── zh-TW.json  zh-CN.json
+│   └── zh-TW.json  zh-CN.json
 ├── sites/                     # Per-site configuration
 │   ├── pedalscape.config.json
 │   └── beltscape.config.json
@@ -102,10 +130,13 @@ ScenicSpin/
 ├── assets/                    # OG images and shared static assets
 ├── scripts/
 │   ├── build.js               # The build script (zero npm deps, pure Node)
+│   ├── validate-data.js       # Catalog + locale validation (npm run check)
+│   ├── serve-dist.js          # Static server for previews and tests
 │   └── generate-og-image.ps1  # OG image generator
 ├── tests/
 │   ├── pwa-local.spec.js      # Catalog, player, favorites behavior
-│   └── pwa-offline.spec.js    # Service worker / offline shell
+│   ├── pwa-offline.spec.js    # Service worker / offline shell
+│   └── compact-controls.spec.js # Compact player controls
 ├── playwright.config.js       # Test runner (reads SITE env to pick config)
 ├── .github/workflows/
 │   └── deploy.yml             # CI: build → test → deploy both sites
@@ -230,7 +261,7 @@ After editing, rebuild and the new route appears in the catalog automatically (`
 
 ## 🌍 Internationalization
 
-Each locale file in [`locales/`](locales/) holds ~164 keys. `en.json` is the **source of truth**. Strings support runtime `{{token}}` substitution so the same phrase reads correctly per site:
+Each locale file in [`locales/`](locales/) holds ~208 keys. `en.json` is the **source of truth**. Strings support runtime `{{token}}` substitution so the same phrase reads correctly per site:
 
 ```json
 "hero_copy": "Jump into curated scenic {{activity_verb}} routes, then launch a fullscreen {{activity_noun_singular}} on your laptop, tablet, or TV."
@@ -244,7 +275,7 @@ Each locale file in [`locales/`](locales/) holds ~164 keys. `en.json` is the **s
 2. **Fallback activity keys** — `activity_noun_singular`, `activity_verb`, `activity_device`, etc. are injected **only as fallbacks**. A translator‑provided value always wins; English stubs get replaced with the site's word (e.g. `ride` → `walk`).
 3. **Per‑language overrides** — `beltscape.config.json` carries a `localeOverrides` block with proper walking vocabulary for each language (German *Wanderung*, Spanish *caminata*, French *marche*, Italian *passeggiata*, Turkish *yürüyüş*, Chinese walking terms…), applied last.
 
-This is why one set of locale files produces both "ride / cycling / bike" and "walk / walking / treadmill" copy across eight languages.
+This is why one set of locale files produces both "ride / cycling / bike" and "walk / walking / treadmill" copy across nine languages.
 
 ### Adding a new language
 
@@ -315,14 +346,30 @@ Coverage includes catalog loading and result counts, the full‑screen player, f
 
 Deployment is automated by [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) on every push to `main`:
 
-```
-push to main
-   │
-   ├─ test  (matrix: pedalscape, beltscape)
-   │     build each site → run Playwright tests
-   │
-   └─ deploy  (needs: test)  (matrix: pedalscape, beltscape)
-         build dist/<site>/  →  force-push to shanselman/<site>  →  GitHub Pages
+```mermaid
+flowchart LR
+    push(["⬆️ push to main"]) --> test
+
+    subgraph test["🧪 test · matrix"]
+        direction TB
+        tp["pedalscape<br/>build → Playwright"]
+        tb["beltscape<br/>build → Playwright"]
+    end
+
+    subgraph deploy["🚀 deploy · needs test"]
+        direction TB
+        dp["build dist/pedalscape/"] --> rp["force-push →<br/>shanselman/pedalscape"]
+        db["build dist/beltscape/"] --> rb["force-push →<br/>shanselman/beltscape"]
+    end
+
+    test --> deploy
+    rp --> gp(["🌐 GitHub Pages<br/>pedalscape.com"])
+    rb --> gb(["🌐 GitHub Pages<br/>beltscape.com"])
+
+    classDef pedal fill:#38e8a4,stroke:#062017,color:#062017
+    classDef belt fill:#4d9de0,stroke:#0b2a45,color:#fff
+    class tp,dp,rp,gp pedal
+    class tb,db,rb,gb belt
 ```
 
 - Each site is **built and tested independently** in a matrix job; a failing site blocks its own deploy.
@@ -351,7 +398,8 @@ Please keep the projects local‑first and privacy‑friendly: no analytics, no 
 - **Author & maintainer:** Scott Hanselman ([@shanselman](https://github.com/shanselman))
 - **Translations:**
   - Serdar Cevher — 🇪🇸 Spanish, 🇫🇷 French, 🇮🇹 Italian, 🇹🇷 Turkish
-  - [@dtemme](https://github.com/dtemme) - 🇩🇪 German
+  - [@dtemme](https://github.com/dtemme) — 🇩🇪 German
+  - [@sunefibaek](https://github.com/sunefibaek) — 🇩🇰 Danish
   - Will 保哥 ([@doggy8088](https://github.com/doggy8088)) — 🇹🇼 Traditional Chinese, 🇨🇳 Simplified Chinese
 - **Scenic routes:** the original YouTube creators, whose public streams are embedded with attribution. Please support them directly.
 
